@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "verify": "tsx scripts/verify.ts",
+    "stats": "tsx scripts/stats.ts",
     "demo": "tsx scripts/demo.ts",
     "build:golden": "tsx --env-file=.env.local scripts/verify.ts --update",
     "test": "tsx --test tests/*.test.ts",

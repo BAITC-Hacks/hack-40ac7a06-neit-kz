@@ -32,6 +32,7 @@ type ApiResponse = MatchResponse & { explanationSource?: string };
 
 const SCENARIOS = scenarios as Scenario[];
 const META = meta as {
+  profiles: number;
   categories: string[];
   cities: string[];
   eventFormats: string[];
@@ -207,7 +208,7 @@ export default function Home() {
           neIT.kz <span>· подбор подрядчиков</span>
         </div>
         <div className="topbar-meta">
-          66 профилей · окно 23.09 — 31.12.2026
+          {META.profiles} профилей · окно 23.09 — 31.12.2026
           {data && (
             <>
               <br />

@@ -226,7 +226,7 @@ export function nearestCandidates(req: MatchRequest, alreadyShown: string[], lim
   if (limit <= 0) return [];
   const exclude = new Set(alreadyShown);
 
-  let pool = CONTRACTORS.filter((c) => !exclude.has(c.id) && c.categories.includes(req.category));
+  const pool = CONTRACTORS.filter((c) => !exclude.has(c.id) && c.categories.includes(req.category));
   if (pool.length === 0) return [];
 
   const scored = pool.map((c) => {

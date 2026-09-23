@@ -5,6 +5,8 @@ import type { Contractor } from './types';
 export const CONTRACTORS = contractorsJson as Contractor[];
 
 export const META = metaJson as {
+  /** размер каталога: показывается в шапке, сверяется в npm run stats */
+  profiles: number;
   categories: string[];
   eventFormats: string[];
   languages: string[];
