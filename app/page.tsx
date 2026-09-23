@@ -165,8 +165,8 @@ export default function Home() {
 
             {parsed.unsupported.length > 0 && (
               <ul className="mt-2 space-y-0.5 text-xs text-amber-800">
-                {parsed.unsupported.map((u) => (
-                  <li key={u.quote}>«{u.quote}» — {u.reason}</li>
+                {parsed.unsupported.map((u, i) => (
+                  <li key={`${u.quote}-${i}`}>«{u.quote}» — {u.reason}</li>
                 ))}
               </ul>
             )}

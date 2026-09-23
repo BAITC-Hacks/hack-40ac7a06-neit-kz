@@ -69,12 +69,37 @@ function norm(s: string): string {
   return s.toLowerCase().replace(/ё/g, 'е').trim();
 }
 
+/** Длина общего начала двух слов. */
+function commonPrefix(a: string, b: string): number {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  return i;
+}
+
+/**
+ * Сопоставление с каталогом устойчиво к падежам: «АСтану» → Астана,
+ * «ведущего» → Ведущий, «юбилея» → юбилей. Сравниваем по общему началу слова,
+ * а не по отрезанному окончанию — окончаний в русском слишком много.
+ */
 function lookup(dict: Record<string, string>, raw: string | undefined): string | undefined {
   if (!raw) return undefined;
   const n = norm(raw);
   if (dict[n]) return dict[n];
+
+  const words = n.split(/[^a-zа-я0-9]+/i).filter(Boolean);
+
+  // Сначала точные вхождения. Короткие синонимы («мс», «др») ищем только как
+  // отдельное слово: иначе «другое мероприятие» превращается в день рождения.
   for (const [key, value] of Object.entries(dict)) {
-    if (n.includes(key)) return value;
+    if (key.length <= 2 ? words.includes(key) : n.includes(key)) return value;
+  }
+
+  // Потом по общему началу. Порог зависит от длины ключа, чтобы «фотозона»
+  // не сопоставилась с «фотограф» по общему «фото».
+  for (const [key, value] of Object.entries(dict)) {
+    if (key.length <= 4) continue;
+    const need = Math.max(5, key.length - 3);
+    if (words.some((w) => commonPrefix(w, key) >= need)) return value;
   }
   return undefined;
 }
@@ -121,6 +146,11 @@ function systemPrompt(): string {
     '7. Всё, в чём не уверен, клади в unclear с точной цитатой.',
   ].join('\n');
 }
+
+/** Сопоставление с каталогом без обращения к модели — вынесено ради тестов. */
+export const matchCity = (raw: string) => lookup(CITY_SYNONYMS, raw);
+export const matchCategory = (raw: string) => lookup(CATEGORY_SYNONYMS, raw);
+export const matchFormat = (raw: string) => lookup(FORMAT_SYNONYMS, raw);
 
 const cache = new Map<string, ParsedRequest>();
 
@@ -252,9 +282,31 @@ export async function parseRequest(text: string): Promise<ParsedRequest> {
       wishes = wishes.filter((w) => w !== promoted);
     }
   }
+  // Модель часто помечает «неясным» то, что мы уже разложили по полям
+  // («ведущий» при category = Ведущий). Такие замечания только шумят.
+  const resolved = new Set(
+    [category, city, eventFormat].filter(Boolean).map((v) => norm(String(v))),
+  );
   for (const u of raw.unclear ?? []) {
-    if (u?.quote) unsupported.push({ quote: u.quote, reason: u.note ?? 'не удалось разобрать' });
+    if (!u?.quote) continue;
+    const handled =
+      lookup(CATEGORY_SYNONYMS, u.quote) && resolved.has(norm(lookup(CATEGORY_SYNONYMS, u.quote)!)) ||
+      lookup(CITY_SYNONYMS, u.quote) && resolved.has(norm(lookup(CITY_SYNONYMS, u.quote)!)) ||
+      lookup(FORMAT_SYNONYMS, u.quote) && resolved.has(norm(lookup(FORMAT_SYNONYMS, u.quote)!));
+    if (handled) continue;
+    unsupported.push({ quote: u.quote, reason: u.note ?? 'не удалось разобрать' });
   }
+
+  // Одна цитата — одна строка: город мог попасть и в проверку каталога, и в «неясное».
+  const seen = new Set<string>();
+  const deduped = unsupported.filter((u) => {
+    const key = norm(u.quote);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  unsupported.length = 0;
+  unsupported.push(...deduped);
 
   const missing: string[] = [];
   if (!category) missing.push('категория');
