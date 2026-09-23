@@ -6,6 +6,20 @@ import meta from '@/data/meta.json';
 import type { Card, MatchRequest, MatchResponse } from '@/lib/types';
 
 type Scenario = { id: string; title: string; req: MatchRequest };
+type Position = {
+  category: string; city?: string; date?: string; eventFormat?: string;
+  budgetKzt?: number; durationHours?: number; language?: string;
+  wishes: string[]; missing: string[]; summary: string;
+};
+
+type Brief = {
+  positions: Position[];
+  unsupported: Array<{ quote: string; reason: string }>;
+  notes?: string[];
+  question?: string;
+  summary: string;
+};
+
 type ParsedRequest = {
   city?: string; date?: string; category?: string; eventFormat?: string;
   budgetKzt?: number; durationHours?: number; language?: string;
@@ -48,12 +62,14 @@ export default function Home() {
   const [req, setReq] = useState<MatchRequest>(SCENARIOS[0].req);
   const [wishText, setWishText] = useState('');
   const [data, setData] = useState<ApiResponse | null>(null);
+  /** Несколько позиций в одном запросе: «ведущий и фотограф» — два подбора со своими бюджетами. */
+  const [multi, setMulti] = useState<Array<{ title: string; data: ApiResponse }>>([]);
   const [loading, setLoading] = useState(false);
   const [anon, setAnon] = useState(false);
   const [useLlm, setUseLlm] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chatText, setChatText] = useState('');
-  const [parsed, setParsed] = useState<ParsedRequest | null>(null);
+  const [brief, setBrief] = useState<Brief | null>(null);
   const [parsing, setParsing] = useState(false);
 
   const range = META.priceRanges[`${req.category}|${req.city}`];
@@ -71,6 +87,7 @@ export default function Home() {
   }, []);
 
   async function search(next: MatchRequest = req, wishes = wishText) {
+    setMulti([]);
     setLoading(true);
     setError(null);
     const payload: MatchRequest & { llm: boolean } = {
@@ -99,14 +116,14 @@ export default function Home() {
     setParsing(true);
     setError(null);
     try {
-      const res = await fetch('/api/parse', {
+      const res = await fetch('/api/brief', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ text: chatText }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Не удалось разобрать запрос');
-      setParsed(json as ParsedRequest);
+      setBrief(json as Brief);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка');
     } finally {
@@ -114,22 +131,62 @@ export default function Home() {
     }
   }
 
-  /** Подтверждение: переносим разобранное в форму. Поиск идёт от подтверждённой структуры. */
-  function applyParsed() {
-    if (!parsed) return;
-    const next: MatchRequest = {
-      city: parsed.city ?? req.city,
-      category: parsed.category ?? req.category,
-      date: parsed.date ?? req.date,
-      eventFormat: parsed.eventFormat,
-      budgetKzt: parsed.budgetKzt,
-      durationHours: parsed.durationHours,
-      language: parsed.language,
-    };
-    const wishes = parsed.wishes.join(', ');
-    setReq(next);
-    setWishText(wishes);
-    void search(next, wishes);
+  /**
+   * Подтверждение: поиск идёт от подтверждённой структуры, а не от текста.
+   * Позиций может быть несколько — тогда подбор запускается по каждой отдельно,
+   * со своим бюджетом и пожеланиями.
+   */
+  async function applyParsed() {
+    if (!brief || brief.positions.length === 0) return;
+    setMulti([]);
+    setData(null);
+
+    const first = brief.positions[0];
+    const asRequest = (p: Position): MatchRequest => ({
+      city: p.city ?? req.city,
+      category: p.category,
+      date: p.date ?? req.date,
+      eventFormat: p.eventFormat,
+      budgetKzt: p.budgetKzt,
+      durationHours: p.durationHours,
+      language: p.language,
+    });
+
+    setReq(asRequest(first));
+    setWishText(first.wishes.join(', '));
+
+    if (brief.positions.length === 1) {
+      void search(asRequest(first), first.wishes.join(', '));
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const blocks: Array<{ title: string; data: ApiResponse }> = [];
+      for (const p of brief.positions) {
+        const res = await fetch('/api/match', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            ...asRequest(p),
+            wishes: p.wishes.length ? p.wishes : undefined,
+            llm: useLlm,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok) continue;
+        const title = [p.category, p.budgetKzt ? `до ${p.budgetKzt.toLocaleString('ru-RU')} ₸` : null]
+          .filter(Boolean)
+          .join(' · ');
+        blocks.push({ title, data: json as ApiResponse });
+      }
+      setMulti(blocks);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка');
+    } finally {
+      setLoading(false);
+    }
   }
 
   function runScenario(s: Scenario) {
@@ -139,7 +196,8 @@ export default function Home() {
     void search(s.req, wishes);
   }
 
-  const outcome = data ? (OUTCOME_LABEL[data.outcome] ?? { title: data.outcome, tone: 'o-flat' }) : null;
+  const blocks: Array<{ title?: string; data: ApiResponse }> =
+    multi.length > 0 ? multi : data ? [{ data }] : [];
 
   return (
     <>
@@ -184,32 +242,59 @@ export default function Home() {
             </button>
           </div>
 
-          {parsed && (
+          {brief && (
             <div className="understood mt-5 max-w-3xl">
-              <div className="understood-h">Понял так</div>
-              <div className="whitespace-pre-line">{parsed.summary}</div>
+              <div className="understood-h">
+                {brief.positions.length > 1 ? `Понял ${brief.positions.length} позиции` : 'Понял так'}
+              </div>
 
-              {parsed.unsupported.length > 0 && (
+              {brief.positions.length > 0 ? (
+                <ul className="space-y-1">
+                  {brief.positions.map((p) => (
+                    <li key={p.category}>
+                      {brief.positions.length > 1 && '• '}
+                      {p.summary}
+                      {p.wishes.length > 0 && (
+                        <span style={{ color: 'var(--muted)' }}> · пожелания: {p.wishes.join(', ')}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div style={{ color: 'var(--muted)' }}>пока ничего не понял</div>
+              )}
+
+              {(brief.notes ?? []).map((n) => (
+                <div key={n} className="mt-2.5 text-[13px]" style={{ color: 'var(--warn)' }}>
+                  ⚠ {n}
+                </div>
+              ))}
+
+              {brief.unsupported.length > 0 && (
                 <ul className="mt-2.5 space-y-1 text-[13px]" style={{ color: 'var(--warn)' }}>
-                  {parsed.unsupported.map((u, i) => (
+                  {brief.unsupported.map((u, i) => (
                     <li key={`${u.quote}-${i}`}>«{u.quote}» — {u.reason}</li>
                   ))}
                 </ul>
               )}
 
-              {parsed.question && (
+              {brief.question && (
                 <div className="mt-2.5 text-[13px]" style={{ color: 'var(--muted)' }}>
-                  {parsed.question}
+                  {brief.question}
                 </div>
               )}
 
               <div className="mt-3 flex flex-wrap items-center gap-2.5">
-                <button onClick={applyParsed} disabled={parsed.missing.length > 0} className="btn btn-go">
-                  Всё верно, искать
+                <button
+                  onClick={() => void applyParsed()}
+                  disabled={brief.positions.length === 0 || brief.positions.some((p) => p.missing.length > 0)}
+                  className="btn btn-go"
+                >
+                  {brief.positions.length > 1 ? `Искать по ${brief.positions.length} позициям` : 'Всё верно, искать'}
                 </button>
                 <span className="text-[13px]" style={{ color: 'var(--faint)' }}>
-                  {parsed.missing.length > 0
-                    ? `не хватает: ${parsed.missing.join(', ')} — допишите в запросе или заполните форму ниже`
+                  {brief.positions.some((p) => p.missing.length > 0)
+                    ? `не хватает: ${[...new Set(brief.positions.flatMap((p) => p.missing))].join(', ')} — допишите в запросе или заполните форму ниже`
                     : 'можно поправить любое поле в форме ниже'}
                 </span>
               </div>
@@ -285,8 +370,29 @@ export default function Home() {
           </p>
         )}
 
-        {data && outcome && (
-          <>
+        {blocks.map((b) => (
+          <ResultBlock key={b.title ?? 'one'} data={b.data} title={b.title} anon={anon} />
+        ))}
+      </main>
+    </>
+  );
+}
+
+/** Один результат подбора: исход, карточки, послабления, ближайшее и воронка. */
+function ResultBlock({
+  data,
+  title,
+  anon,
+}: {
+  data: ApiResponse;
+  title?: string;
+  anon: boolean;
+}) {
+  const outcome = OUTCOME_LABEL[data.outcome] ?? { title: data.outcome, tone: 'o-flat' };
+  return (
+    <>
+      {title && <h2 className="sec-h mt-10">{title}</h2>}
+
             <div className={`outcome mt-9 ${outcome.tone}`}>
               <span className="outcome-tag">{outcome.title}</span>
               <p>{data.message}</p>
@@ -373,9 +479,6 @@ export default function Home() {
                 </>
               )}
             </section>
-          </>
-        )}
-      </main>
     </>
   );
 }

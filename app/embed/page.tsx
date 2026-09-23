@@ -27,6 +27,7 @@ type Position = {
 type Brief = {
   positions: Position[];
   unsupported: Array<{ quote: string; reason: string }>;
+  notes?: string[];
   question?: string;
   summary: string;
 };
@@ -149,7 +150,10 @@ function WidgetInner() {
         wishes: single ? first?.wishes : undefined,
       });
 
-      const notes = brief.unsupported.map((u) => `«${u.quote}» — ${u.reason}`);
+      const notes = [
+        ...brief.unsupported.map((u) => `«${u.quote}» — ${u.reason}`),
+        ...(brief.notes ?? []),
+      ];
       const heard =
         brief.positions.length > 1
           ? `Понял ${brief.positions.length} позиции:\n${brief.positions.map((p) => `• ${p.summary}`).join('\n')}`

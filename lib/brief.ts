@@ -37,6 +37,8 @@ export type Position = {
 export type Brief = {
   positions: Position[];
   unsupported: Array<{ quote: string; reason: string }>;
+  /** честные оговорки о разборе: например, что бюджет назван общий */
+  notes: string[];
   question?: string;
   summary: string;
 };
@@ -176,7 +178,7 @@ async function singlePositionBrief(text: string, known?: KnownFields): Promise<B
         },
       ]
     : [];
-  return { positions, unsupported: one.unsupported, question: one.question, summary: one.summary };
+  return { positions, unsupported: one.unsupported, notes: [], question: one.question, summary: one.summary };
 }
 
 const cache = new Map<string, Brief>();
@@ -227,10 +229,24 @@ export async function parseBrief(text: string, known?: KnownFields): Promise<Bri
     p.summary = summarize(p);
   }
 
+  // Общий бюджет на несколько позиций мы НЕ делим — делить за клиента значит выдумывать.
+  // Применяем как верхнюю границу каждой позиции и честно об этом говорим.
+  const notes: string[] = [];
+  const budgets = positions.map((p) => p.budgetKzt).filter(Boolean);
+  if (positions.length > 1 && budgets.length === positions.length && new Set(budgets).size === 1) {
+    const sum = (budgets[0] as number) * positions.length;
+    notes.push(
+      `Бюджет ${(budgets[0] as number).toLocaleString('ru-RU')} ₸ назван общий — применяю его как верхнюю границу ` +
+        `для каждой позиции, а не делю между ними. В сумме это может дойти до ${sum.toLocaleString('ru-RU')} ₸. ` +
+        `Назовите суммы по позициям, если нужно точнее.`,
+    );
+  }
+
   const missing = [...new Set(positions.flatMap((p) => p.missing))];
   const brief: Brief = {
     positions,
     unsupported: counted.unsupported,
+    notes,
     question: missing.includes('город')
       ? `В каком городе? В каталоге есть ${META.cities.slice(0, -1).join(', ')} и ${META.cities.at(-1)}.`
       : missing.includes('дата')
