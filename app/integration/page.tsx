@@ -33,13 +33,15 @@ type MatchedCard = {
   priceFromKzt: number; explanation?: string; relaxation?: string;
 };
 
-type MatchMessage = {
-  type: string;
+type MatchedPosition = {
+  category: string;
   outcome: string;
   message: string;
   request: { city: string; category: string; date: string; eventFormat?: string; budgetKzt?: number };
   cards: MatchedCard[];
 };
+
+type MatchMessage = { type: string; positions: MatchedPosition[] };
 
 const CATALOG_STUB = ['Куррапика', 'Мицури Канроджи', 'Джинбей', 'Хаул', 'Софи Хаттер'];
 
@@ -51,7 +53,7 @@ export default function IntegrationPage() {
   useEffect(() => {
     function onMessage(e: MessageEvent) {
       const data = e.data as MatchMessage | undefined;
-      if (data?.type === 'podbor:match') setMatched(data);
+      if (data?.type === 'podbor:match' && Array.isArray(data.positions)) setMatched(data);
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
@@ -98,35 +100,53 @@ export default function IntegrationPage() {
                 {matched ? (
                   <>
                     <h2 className="text-sm font-semibold">Подходят под ваш запрос</h2>
-                    <p className="text-[11px] text-slate-500">
-                      {matched.request.category} · {matched.request.city} · {matched.request.date}
-                      {matched.request.budgetKzt ? ` · до ${matched.request.budgetKzt.toLocaleString('ru-RU')} ₸` : ''}
+                    <p className="mb-3 text-[11px] text-slate-500">
+                      {matched.positions.length > 1
+                        ? `${matched.positions.length} позиции, отобраны виджетом`
+                        : 'отобрано виджетом'}
                     </p>
-                    <p className="mb-3 text-xs text-slate-500">
-                      {matched.cards.length > 0
-                        ? `${matched.cards.length} из каталога, отобраны виджетом`
-                        : 'подходящих нет — виджет объяснил почему'}
-                    </p>
-                    <div className="space-y-2">
-                      {matched.cards.map((c) => (
-                        <div key={c.id} className="rounded-lg border border-blue-200 bg-blue-50/40 p-2">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded bg-slate-200" />
-                            <div className="flex-1">
-                              <div className="text-sm">{c.name}</div>
-                              <div className="text-[11px] text-slate-400">
-                                {c.category} · {c.city} · {c.priceFromKzt.toLocaleString('ru-RU')} ₸
-                                {c.relaxation ? ` · ${c.relaxation}` : ''}
-                              </div>
-                            </div>
-                            <button className="rounded bg-blue-600 px-2 py-1 text-[11px] text-white">Написать</button>
+
+                    <div className="space-y-4">
+                      {matched.positions.map((pos) => (
+                        <div key={pos.category}>
+                          <div className="mb-1 flex items-baseline gap-2">
+                            <b className="text-xs">{pos.category}</b>
+                            <span className="text-[11px] text-slate-400">
+                              {pos.request.city} · {pos.request.date}
+                              {pos.request.budgetKzt
+                                ? ` · до ${pos.request.budgetKzt.toLocaleString('ru-RU')} ₸`
+                                : ''}
+                            </span>
                           </div>
-                          {c.explanation && (
-                            <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{c.explanation}</p>
+                          {pos.cards.length === 0 && (
+                            <p className="text-[11px] text-slate-500">{pos.message}</p>
                           )}
+                          <div className="space-y-2">
+                            {pos.cards.map((c) => (
+                              <div key={c.id} className="rounded-lg border border-blue-200 bg-blue-50/40 p-2">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-10 w-10 rounded bg-slate-200" />
+                                  <div className="flex-1">
+                                    <div className="text-sm">{c.name}</div>
+                                    <div className="text-[11px] text-slate-400">
+                                      {c.category} · {c.city} · {c.priceFromKzt.toLocaleString('ru-RU')} ₸
+                                      {c.relaxation ? ` · ${c.relaxation}` : ''}
+                                    </div>
+                                  </div>
+                                  <button className="rounded bg-blue-600 px-2 py-1 text-[11px] text-white">
+                                    Написать
+                                  </button>
+                                </div>
+                                {c.explanation && (
+                                  <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{c.explanation}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
+
                     <p className="mt-3 text-[11px] text-slate-400">
                       Каталог площадки обновился сам: виджет отдал подборку через postMessage,
                       а карточки и кнопка «Написать» — собственные, площадки.

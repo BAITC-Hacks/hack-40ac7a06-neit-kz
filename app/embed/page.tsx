@@ -7,10 +7,10 @@ import type { Card, MatchRequest, MatchResponse } from '@/lib/types';
 /**
  * Встраиваемый виджет: чат-бот, который ведёт предварительный диалог и показывает подбор.
  *
- * Отдельная страница без шапки и лишней обвязки — её вставляют на сайт площадки
- * через <iframe>. Тот же движок, те же API: /api/parse для диалога, /api/match для подбора.
- * Параметры запроса (?city=…&category=…) позволяют предзаполнить контекст, если площадка
- * уже знает, что ищет клиент.
+ * Отдельная страница без шапки — её вставляют на сайт площадки через <iframe>.
+ * Разбор идёт в два прогона (/api/brief): сначала сколько позиций нужно клиенту,
+ * потом условия каждой. Поэтому «ведущий и фотограф на свадьбу» даёт две подборки,
+ * а не одну, и у каждой свой бюджет.
  */
 
 type Known = {
@@ -18,15 +18,21 @@ type Known = {
   budgetKzt?: number; durationHours?: number; language?: string; wishes?: string[];
 };
 
-type Parsed = Known & {
-  wishes: string[];
-  missing: string[];
+type Position = {
+  category: string; city?: string; date?: string; eventFormat?: string;
+  budgetKzt?: number; durationHours?: number; language?: string;
+  wishes: string[]; missing: string[]; summary: string;
+};
+
+type Brief = {
+  positions: Position[];
   unsupported: Array<{ quote: string; reason: string }>;
   question?: string;
   summary: string;
 };
 
 type Message = { role: 'bot' | 'user'; text: string };
+type Result = { position: Position; data: MatchResponse };
 
 const money = (n: number) => `${n.toLocaleString('ru-RU')} ₸`;
 
@@ -41,15 +47,17 @@ function WidgetInner() {
   const params = useSearchParams();
   const [known, setKnown] = useState<Known>({});
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'bot', text: 'Расскажите, что за мероприятие и кто нужен. Например: «ведущий на свадьбу в Алматы 18 ноября, бюджет до миллиона».' },
+    {
+      role: 'bot',
+      text: 'Расскажите, что за мероприятие и кто нужен. Можно сразу несколько: «ведущий и фотограф на свадьбу в Алматы 18 ноября, ведущему 900 тысяч, фотографу 300».',
+    },
   ]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<MatchResponse | null>(null);
+  const [results, setResults] = useState<Result[]>([]);
   const bottom = useRef<HTMLDivElement>(null);
   const presetApplied = useRef(false);
 
-  // Площадка может передать то, что уже знает о клиенте.
   useEffect(() => {
     if (presetApplied.current) return;
     const preset: Known = {};
@@ -70,11 +78,15 @@ function WidgetInner() {
 
     // Площадка передала всё нужное — показываем подбор сразу, без лишних вопросов.
     if (preset.city && preset.category && preset.date) {
-      const what = [preset.category, preset.city, preset.eventFormat, preset.date]
-        .filter(Boolean)
-        .join(' · ');
+      const what = [preset.category, preset.city, preset.eventFormat, preset.date].filter(Boolean).join(' · ');
       setMessages((m) => [...m, { role: 'bot', text: `Вижу запрос из каталога: ${what}. Показываю, кто подходит.` }]);
-      void search(preset);
+      void runSearch([
+        {
+          category: preset.category, city: preset.city, date: preset.date,
+          eventFormat: preset.eventFormat, budgetKzt: preset.budgetKzt,
+          wishes: [], missing: [], summary: what,
+        },
+      ]);
       return;
     }
 
@@ -86,7 +98,7 @@ function WidgetInner() {
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, result]);
+  }, [messages, results]);
 
   /** Просьбы «ещё вариантов» отвечаем кодом: это не новое поле, а запрос на расширение. */
   function isMoreRequest(text: string): boolean {
@@ -99,8 +111,8 @@ function WidgetInner() {
     setInput('');
     setMessages((m) => [...m, { role: 'user', text }]);
 
-    if (isMoreRequest(text) && result) {
-      const hint = result.message.match(/Если дата гибкая: ([\d-]+) подходящих (\d+)/);
+    if (isMoreRequest(text) && results.length > 0) {
+      const hint = results[0].data.message.match(/Если дата гибкая: ([\d-]+) подходящих (\d+)/);
       setMessages((m) => [
         ...m,
         {
@@ -115,32 +127,44 @@ function WidgetInner() {
 
     setBusy(true);
     try {
-      const res = await fetch('/api/parse', {
+      const res = await fetch('/api/brief', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ text, known }),
       });
-      const parsed = (await res.json()) as Parsed;
+      const brief = (await res.json()) as Brief;
       if (!res.ok) throw new Error('не разобрал');
 
-      const next: Known = {
-        city: parsed.city, date: parsed.date, category: parsed.category,
-        eventFormat: parsed.eventFormat, budgetKzt: parsed.budgetKzt,
-        durationHours: parsed.durationHours, language: parsed.language, wishes: parsed.wishes,
-      };
-      setKnown(next);
+      // Общие поля запоминаем для следующих реплик. Когда позиций несколько,
+      // категорию и бюджет в память не кладём: они у каждой позиции свои.
+      const first = brief.positions[0];
+      const single = brief.positions.length === 1;
+      setKnown({
+        city: first?.city ?? known.city,
+        date: first?.date ?? known.date,
+        eventFormat: first?.eventFormat ?? known.eventFormat,
+        language: first?.language ?? known.language,
+        category: single ? first?.category : undefined,
+        budgetKzt: single ? first?.budgetKzt : undefined,
+        wishes: single ? first?.wishes : undefined,
+      });
 
-      const notes = parsed.unsupported.map((u) => `«${u.quote}» — ${u.reason}`);
-      const said = parsed.summary ? `Понял так: ${parsed.summary.replace(/\n/g, '. ')}` : '';
+      const notes = brief.unsupported.map((u) => `«${u.quote}» — ${u.reason}`);
+      const heard =
+        brief.positions.length > 1
+          ? `Понял ${brief.positions.length} позиции:\n${brief.positions.map((p) => `• ${p.summary}`).join('\n')}`
+          : brief.summary
+            ? `Понял так: ${brief.summary.replace(/\n/g, '. ')}`
+            : '';
+
       setMessages((m) => [
         ...m,
         ...(notes.length ? [{ role: 'bot' as const, text: notes.join('\n') }] : []),
-        { role: 'bot', text: [said, parsed.question].filter(Boolean).join('\n') },
+        { role: 'bot', text: [heard, brief.question].filter(Boolean).join('\n') },
       ]);
 
-      if (parsed.missing.length === 0 && next.city && next.category && next.date) {
-        await search(next);
-      }
+      const ready = brief.positions.filter((p) => p.city && p.date);
+      if (ready.length) await runSearch(ready);
     } catch {
       setMessages((m) => [...m, { role: 'bot', text: 'Не получилось разобрать. Напишите иначе, пожалуйста.' }]);
     } finally {
@@ -148,39 +172,48 @@ function WidgetInner() {
     }
   }
 
-  async function search(k: Known) {
-    const body: MatchRequest = {
-      city: k.city!, category: k.category!, date: k.date!,
-      eventFormat: k.eventFormat, budgetKzt: k.budgetKzt,
-      durationHours: k.durationHours, language: k.language,
-      wishes: k.wishes?.length ? k.wishes : undefined,
-    };
-    const res = await fetch('/api/match', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const json = (await res.json()) as MatchResponse;
-    if (!res.ok) return;
-    setResult(json);
+  /** Подбор по каждой позиции отдельно: у них разные категории, бюджеты и пожелания. */
+  async function runSearch(positions: Position[]) {
+    const found: Result[] = [];
+    for (const p of positions) {
+      if (!p.city || !p.date) continue;
+      const body: MatchRequest = {
+        city: p.city, category: p.category, date: p.date,
+        eventFormat: p.eventFormat, budgetKzt: p.budgetKzt,
+        durationHours: p.durationHours, language: p.language,
+        wishes: p.wishes?.length ? p.wishes : undefined,
+      };
+      const res = await fetch('/api/match', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) continue;
+      found.push({ position: p, data: (await res.json()) as MatchResponse });
+    }
+    setResults(found);
 
-    // Площадка может показать подборку своими средствами — например, подсветить
-    // подходящих в собственном каталоге. Виджет отдаёт результат наружу.
+    if (found.some((r) => r.data.cards.length + r.data.softCards.length + r.data.nearestCards.length < 3)) {
+      setMessages((m) => [
+        ...m,
+        { role: 'bot', text: 'Могу расширить поиск: назовите другую дату, поднимите бюджет или снимите формат.' },
+      ]);
+    }
+
+    // Площадка может показать подборку своими средствами — по каждой позиции отдельно.
     try {
       window.parent?.postMessage(
         {
           type: 'podbor:match',
-          outcome: json.outcome,
-          message: json.message,
-          request: json.request,
-          cards: [...json.cards, ...json.softCards, ...json.nearestCards].map((c) => ({
-            id: c.id,
-            name: c.name,
-            category: c.category,
-            city: c.city,
-            priceFromKzt: c.priceFromKzt,
-            explanation: c.explanation,
-            relaxation: c.relaxation?.label,
+          positions: found.map((r) => ({
+            category: r.position.category,
+            request: r.data.request,
+            outcome: r.data.outcome,
+            message: r.data.message,
+            cards: [...r.data.cards, ...r.data.softCards, ...r.data.nearestCards].map((c) => ({
+              id: c.id, name: c.name, category: c.category, city: c.city,
+              priceFromKzt: c.priceFromKzt, explanation: c.explanation, relaxation: c.relaxation?.label,
+            })),
           })),
         },
         '*',
@@ -188,31 +221,18 @@ function WidgetInner() {
     } catch {
       /* виджет может быть открыт и без родителя */
     }
-
-    // Меньше трёх — сразу говорим, чем можно расширить поиск.
-    if (json.cards.length + json.softCards.length + json.nearestCards.length < 3) {
-      setMessages((m) => [
-        ...m,
-        {
-          role: 'bot',
-          text: 'Могу расширить поиск: назовите другую дату, поднимите бюджет или снимите формат — скажите словами, что менять.',
-        },
-      ]);
-    }
   }
 
   function restart() {
     setKnown({});
-    setResult(null);
+    setResults([]);
     setMessages([{ role: 'bot', text: 'Начнём заново. Кто нужен и на какое мероприятие?' }]);
   }
-
-  const all = result ? [...result.cards, ...result.softCards, ...result.nearestCards] : [];
 
   return (
     <div className="flex h-screen flex-col bg-white text-slate-900">
       <header className="flex items-baseline justify-between border-b border-slate-200 px-4 py-2.5">
-        <span className="text-sm font-semibold">Подбор подрядчика</span>
+        <span className="text-sm font-semibold">Подбор подрядчиков</span>
         <button onClick={restart} className="text-xs text-slate-500 underline">начать заново</button>
       </header>
 
@@ -229,16 +249,30 @@ function WidgetInner() {
           </div>
         ))}
 
-        {result && (
-          <div className="pt-2">
+        {results.map((r) => (
+          <section key={r.position.category} className="pt-2">
+            <div className="mb-1 flex items-baseline gap-2">
+              <b className="text-sm">{r.position.category}</b>
+              <span className="text-[11px] text-slate-500">
+                {[
+                  r.position.eventFormat,
+                  r.position.date,
+                  r.position.budgetKzt ? `до ${money(r.position.budgetKzt)}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </span>
+            </div>
             <div className="mb-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-700">
-              <b>{OUTCOME_LABEL[result.outcome] ?? result.outcome}.</b> {result.message}
+              <b>{OUTCOME_LABEL[r.data.outcome] ?? r.data.outcome}.</b> {r.data.message}
             </div>
             <div className="space-y-2">
-              {all.map((c) => <EmbedCard key={c.id} card={c} />)}
+              {[...r.data.cards, ...r.data.softCards, ...r.data.nearestCards].map((c) => (
+                <EmbedCard key={c.id} card={c} />
+              ))}
             </div>
-          </div>
-        )}
+          </section>
+        ))}
         <div ref={bottom} />
       </div>
 

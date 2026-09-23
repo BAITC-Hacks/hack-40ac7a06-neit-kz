@@ -11,7 +11,7 @@ import { META } from './catalog';
  * пользователя. Всё, что не легло, уходит в `unsupported` с цитатой.
  */
 
-const MODEL = 'gpt-4.1-mini';
+export const MODEL = 'gpt-4.1-mini';
 const PROMPT_VERSION = 'parse-v1';
 
 export type ParsedRequest = {
@@ -105,7 +105,7 @@ function lookup(dict: Record<string, string>, raw: string | undefined): string |
 }
 
 /** Цифры бюджета обязаны присутствовать в тексте пользователя — защита от выдуманной суммы. */
-function budgetGrounded(text: string, budget: number): boolean {
+export function budgetGrounded(text: string, budget: number): boolean {
   const digits = text.replace(/[^\d]/g, '');
   const raw = String(budget);
   if (digits.includes(raw)) return true;
@@ -125,6 +125,55 @@ type RawExtraction = {
   wishes?: string[];
   unclear?: Array<{ quote: string; note: string }>;
 };
+
+/**
+ * Прогон 1 — сколько позиций в запросе.
+ *
+ * Паттерн count-then-extract из парсера CastHub: сначала модель называет только
+ * список позиций, без деталей, и лишь потом каждая разбирается отдельно.
+ * Один большой промпт на mini-модели путает поля между позициями:
+ * «ведущему 500, фотографу 300» превращается в одну кашу.
+ */
+export function countPrompt(): string {
+  return [
+    'Определи, подрядчиков каких категорий просит клиент. Больше ничего не извлекай.',
+    '',
+    'Категории ОБЯЗАНЫ быть выбраны ровно из списка, слово в слово:',
+    META.categories.join(' | '),
+    '',
+    'Сопоставляй сам, невзирая на падежи, регистр, опечатки и синонимы:',
+    '«тамаду» → Ведущий, «кавер-группу» → Лайв-бэнд, «зал» → Банкетный зал.',
+    'Категорию, которой нет в списке, НЕ придумывай — клади цитату в unclear.',
+    'Порядок — как в запросе клиента. Если категория одна, верни массив из одного элемента.',
+    '',
+    'Верни JSON: {"categories":["..."],"unclear":[{"quote":"...","note":"..."}]}',
+  ].join('\n');
+}
+
+/** Прогон 2 — детали одной позиции. Промпт видит только её категорию. */
+export function positionPrompt(category: string): string {
+  return [
+    `Клиент ищет подрядчика категории «${category}». Извлеки условия ТОЛЬКО для этой позиции.`,
+    `Сегодня 23.09.2026. Каталог работает с датами ${META.dateWindow.from} — ${META.dateWindow.to}.`,
+    '',
+    'Значения ОБЯЗАНЫ быть из списков, слово в слово:',
+    `city: ${META.cities.join(' | ')}`,
+    `eventFormat: ${META.eventFormats.join(' | ')}`,
+    `language: ${META.languages.join(' | ')}`,
+    '',
+    'Верни JSON:',
+    '{"city":"","date":"YYYY-MM-DD","eventFormat":"","budgetKzt":0,',
+    ' "durationHours":0,"language":"","wishes":["короткие пожелания к этой позиции"],',
+    ' "unclear":[{"quote":"","note":""}]}',
+    '',
+    'ПРАВИЛА:',
+    `1. Если бюджет назван отдельно по позициям — возьми сумму для «${category}», а не общую.`,
+    '2. Город, дата и формат обычно общие для всего мероприятия — их бери из запроса целиком.',
+    `3. Пожелания бери только те, что относятся к «${category}».`,
+    '4. Заполняй только сказанное явно. «Недорого» — не бюджет.',
+    '5. Чего нет — поле не пиши вовсе.',
+  ].join('\n');
+}
 
 export function systemPrompt(): string {
   return [
