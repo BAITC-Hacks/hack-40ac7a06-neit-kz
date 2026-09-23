@@ -32,6 +32,20 @@ export function softDateWindow(category: string): number {
   return META.softDateCategories[category] ?? 0;
 }
 
+/**
+ * Медианная цена категории — основание для деления общего бюджета между позициями.
+ * Сначала по городу клиента, при пустом наборе — по всему каталогу.
+ */
+export function medianPrice(category: string, city?: string): number | undefined {
+  const inCity = city
+    ? CONTRACTORS.filter((c) => c.categories.includes(category) && c.city === city)
+    : [];
+  const pool = inCity.length ? inCity : CONTRACTORS.filter((c) => c.categories.includes(category));
+  if (pool.length === 0) return undefined;
+  const prices = pool.map((c) => c.priceFromKzt).sort((a, b) => a - b);
+  return prices[Math.floor(prices.length / 2)];
+}
+
 export function priceRange(category: string, city: string) {
   return META.priceRanges[`${category}|${city}`];
 }

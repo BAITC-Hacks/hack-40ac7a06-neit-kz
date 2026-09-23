@@ -186,7 +186,7 @@ body {
 .card-soft { border-style: dashed; border-color: var(--warn-line); background: #fffcf5; }
 .card-name { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
 .card-meta { font-size: 14px; color: var(--muted); }
-.card-price { margin-left: auto; font-size: 19px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.card-price { flex: none; font-size: 19px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .card-why { margin: 10px 0 0; font-size: 16px; line-height: 1.55; color: #24272e; }
 
 .relax {
@@ -285,4 +285,21 @@ body {
   .rej li { grid-template-columns: 1fr; gap: 2px; }
   .topbar { padding: 10px 16px; }
   .hero-title { font-size: 28px; }
+}
+
+
+/* Воронка сворачивается: при нескольких позициях развёрнутая мешает сравнивать. */
+details.funnel-box > summary {
+  list-style: none;
+}
+details.funnel-box > summary::-webkit-details-marker {
+  display: none;
+}
+details.funnel-box > summary::before {
+  content: '▸';
+  margin-right: 0.4rem;
+  color: var(--faint);
+}
+details.funnel-box[open] > summary::before {
+  content: '▾';
 }

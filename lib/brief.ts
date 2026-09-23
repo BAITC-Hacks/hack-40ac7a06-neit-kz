@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { META } from './catalog';
+import { META, medianPrice } from './catalog';
 import {
   MODEL,
   budgetGrounded,
@@ -229,17 +229,38 @@ export async function parseBrief(text: string, known?: KnownFields): Promise<Bri
     p.summary = summarize(p);
   }
 
-  // Общий бюджет на несколько позиций мы НЕ делим — делить за клиента значит выдумывать.
-  // Применяем как верхнюю границу каждой позиции и честно об этом говорим.
+  // Общий бюджет клиент обычно называет один на всё мероприятие. Делить его поровну
+  // бессмысленно: ведущий и фотограф стоят по-разному. Делим пропорционально медианным
+  // ценам каталога — это основание из данных, а не наша выдумка, и его видно в карточке.
   const notes: string[] = [];
-  const budgets = positions.map((p) => p.budgetKzt).filter(Boolean);
-  if (positions.length > 1 && budgets.length === positions.length && new Set(budgets).size === 1) {
-    const sum = (budgets[0] as number) * positions.length;
-    notes.push(
-      `Бюджет ${(budgets[0] as number).toLocaleString('ru-RU')} ₸ назван общий — применяю его как верхнюю границу ` +
-        `для каждой позиции, а не делю между ними. В сумме это может дойти до ${sum.toLocaleString('ru-RU')} ₸. ` +
-        `Назовите суммы по позициям, если нужно точнее.`,
-    );
+  const budgets = positions.map((p) => p.budgetKzt).filter((b): b is number => Boolean(b));
+  const sharedBudget =
+    positions.length > 1 && budgets.length === positions.length && new Set(budgets).size === 1
+      ? budgets[0]
+      : undefined;
+
+  if (sharedBudget) {
+    const medians = positions.map((p) => medianPrice(p.category, p.city) ?? 0);
+    const total = medians.reduce((a, b) => a + b, 0);
+    if (total > 0) {
+      positions.forEach((p, i) => {
+        const share = (sharedBudget * medians[i]) / total;
+        // Округляем вниз до 10 000 ₸, чтобы сумма долей не вылезла за общий бюджет.
+        p.budgetKzt = Math.max(10_000, Math.floor(share / 10_000) * 10_000);
+        p.summary = summarize(p);
+      });
+      notes.push(
+        `Бюджет ${sharedBudget.toLocaleString('ru-RU')} ₸ назван общий — разделил его между позициями ` +
+          `по медианным ценам каталога: ` +
+          positions.map((p) => `${p.category} ${p.budgetKzt!.toLocaleString('ru-RU')} ₸`).join(', ') +
+          `. Назовите суммы по позициям, если нужно иначе.`,
+      );
+    } else {
+      notes.push(
+        `Бюджет ${sharedBudget.toLocaleString('ru-RU')} ₸ назван общий, но разделить его не на чем: ` +
+          `в каталоге нет цен по этим категориям. Применяю как верхнюю границу каждой позиции.`,
+      );
+    }
   }
 
   const missing = [...new Set(positions.flatMap((p) => p.missing))];

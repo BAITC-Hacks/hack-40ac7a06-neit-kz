@@ -406,7 +406,7 @@ function ResultBlock({
 
             {data.cards.length > 0 && (
               <section className="mt-8">
-                <div className="flex flex-col gap-3">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {data.cards.map((c, i) => <CardView key={c.id} card={c} index={i} anon={anon} />)}
                 </div>
               </section>
@@ -415,7 +415,7 @@ function ResultBlock({
             {data.softCards.length > 0 && (
               <section className="mt-8">
                 <h2 className="sec-h">Ещё может подойти, если…</h2>
-                <div className="flex flex-col gap-3">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {data.softCards.map((c, i) => (
                     <CardView key={c.id} card={c} index={data.cards.length + i} anon={anon} soft />
                   ))}
@@ -432,20 +432,23 @@ function ResultBlock({
                     насколько они расходятся с запросом.
                   </span>
                 </h2>
-                <div className="flex flex-col gap-3">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {data.nearestCards.map((c, i) => <CardView key={c.id} card={c} index={i} anon={anon} soft />)}
                 </div>
               </section>
             )}
 
-            <section className="funnel-box mt-9">
-              <div className="flex items-baseline gap-2">
+            <details className="funnel-box mt-9">
+              <summary className="flex cursor-pointer items-baseline gap-2">
                 <h2>Как мы отбирали</h2>
                 {/* Технический код исхода — здесь он к месту: это раздел про пайплайн. */}
                 <code className="text-[11px]" style={{ color: 'var(--faint)' }}>
                   исход: {data.outcome}
                 </code>
-              </div>
+                <span className="text-[12px]" style={{ color: 'var(--faint)' }}>
+                  · развернуть
+                </span>
+              </summary>
               <p className="funnel-cap">
                 Семь жёстких фильтров в фиксированном порядке. Тот же запрос всегда даёт тот же порядок карточек.
               </p>
@@ -478,7 +481,7 @@ function ResultBlock({
                   </ul>
                 </>
               )}
-            </section>
+            </details>
     </>
   );
 }
@@ -505,8 +508,9 @@ function CardView({ card, index, anon, soft }: { card: Card; index: number; anon
   const title = anon ? `Подрядчик ${String.fromCharCode(65 + index)}` : card.name;
   return (
     <article className={`card${soft ? ' card-soft' : ''}`}>
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <div>
+      {/* В узкой колонке сетки длинное имя не должно выталкивать цену на новую строку. */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <div className="card-name">{title}</div>
           <div className="card-meta">{card.category} · {card.city}</div>
         </div>
