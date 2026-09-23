@@ -26,6 +26,14 @@ const META = meta as {
 
 const money = (n: number) => `${n.toLocaleString('ru-RU')} ₸`;
 
+/** Человеческая подпись исхода: технический код клиенту ничего не говорит. */
+const OUTCOME_LABEL: Record<string, { text: string; tone: string }> = {
+  MATCHED: { text: 'Подобрали', tone: 'bg-emerald-700' },
+  NO_CATEGORY_IN_CITY: { text: 'В этом городе таких нет', tone: 'bg-amber-600' },
+  NO_FORMAT_IN_POOL: { text: 'Этот формат не берут', tone: 'bg-amber-600' },
+  NO_ONE_PASSES: { text: 'Под ваши условия никто не подходит', tone: 'bg-amber-600' },
+};
+
 /** Откуда взялось отличие от других карточек выдачи. */
 const TIER_LABEL: Record<number, string> = {
   1: 'по полям анкеты',
@@ -265,7 +273,13 @@ export default function Home() {
       {data && (
         <>
           <p className="mb-4 rounded-lg border border-slate-200 bg-white p-4 text-sm leading-relaxed">
-            <span className="mr-2 rounded bg-slate-900 px-2 py-0.5 text-xs font-medium text-white">{data.outcome}</span>
+            <span
+              className={`mr-2 rounded px-2 py-0.5 text-xs font-medium text-white ${
+                OUTCOME_LABEL[data.outcome]?.tone ?? 'bg-slate-900'
+              }`}
+            >
+              {OUTCOME_LABEL[data.outcome]?.text ?? data.outcome}
+            </span>
             {data.message}
           </p>
 
@@ -302,7 +316,10 @@ export default function Home() {
           )}
 
           <section className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="mb-3 text-sm font-semibold">Как мы отбирали</h2>
+            <div className="mb-3 flex items-baseline gap-2">
+              <h2 className="text-sm font-semibold">Как мы отбирали</h2>
+              <code className="text-[10px] text-slate-400">исход: {data.outcome}</code>
+            </div>
             <div className="flex flex-wrap items-center gap-1 text-xs">
               {data.funnel.map((f) => (
                 <span key={f.step} className="rounded bg-slate-100 px-2 py-1">
