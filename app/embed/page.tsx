@@ -55,27 +55,64 @@ function WidgetInner() {
     const preset: Known = {};
     const city = params.get('city');
     const category = params.get('category');
+    const date = params.get('date');
+    const budget = params.get('budget');
+    const format = params.get('format');
     if (city) preset.city = city;
     if (category) preset.category = category;
-    if (Object.keys(preset).length) {
-      presetApplied.current = true;
-      setKnown(preset);
-      setMessages((m) => [
-        ...m,
-        { role: 'bot', text: `Вижу из каталога: ${[preset.category, preset.city].filter(Boolean).join(' · ')}. Осталось уточнить дату и бюджет.` },
-      ]);
+    if (date) preset.date = date;
+    if (format) preset.eventFormat = format;
+    if (budget && Number(budget) > 0) preset.budgetKzt = Number(budget);
+    if (Object.keys(preset).length === 0) return;
+
+    presetApplied.current = true;
+    setKnown(preset);
+
+    // Площадка передала всё нужное — показываем подбор сразу, без лишних вопросов.
+    if (preset.city && preset.category && preset.date) {
+      const what = [preset.category, preset.city, preset.eventFormat, preset.date]
+        .filter(Boolean)
+        .join(' · ');
+      setMessages((m) => [...m, { role: 'bot', text: `Вижу запрос из каталога: ${what}. Показываю, кто подходит.` }]);
+      void search(preset);
+      return;
     }
+
+    setMessages((m) => [
+      ...m,
+      { role: 'bot', text: `Вижу из каталога: ${[preset.category, preset.city].filter(Boolean).join(' · ')}. Осталось уточнить дату и бюджет.` },
+    ]);
   }, [params]);
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, result]);
 
+  /** Просьбы «ещё вариантов» отвечаем кодом: это не новое поле, а запрос на расширение. */
+  function isMoreRequest(text: string): boolean {
+    return /ещ[её]|друг|вариант|альтернатив|больше/i.test(text) && text.length < 40;
+  }
+
   async function send() {
     const text = input.trim();
     if (!text || busy) return;
     setInput('');
     setMessages((m) => [...m, { role: 'user', text }]);
+
+    if (isMoreRequest(text) && result) {
+      const hint = result.message.match(/Если дата гибкая: ([\d-]+) подходящих (\d+)/);
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'bot',
+          text: hint
+            ? `Под ваши условия это всё, кто есть. Но ${hint[1]} свободных ${hint[2]} — скажите «ищи на ${hint[1]}», и покажу их. Ещё можно поднять бюджет или убрать формат.`
+            : 'Под ваши условия это всё, кто есть. Назовите другую дату или бюджет — пересчитаю.',
+        },
+      ]);
+      return;
+    }
+
     setBusy(true);
     try {
       const res = await fetch('/api/parse', {
@@ -124,7 +161,44 @@ function WidgetInner() {
       body: JSON.stringify(body),
     });
     const json = (await res.json()) as MatchResponse;
-    if (res.ok) setResult(json);
+    if (!res.ok) return;
+    setResult(json);
+
+    // Площадка может показать подборку своими средствами — например, подсветить
+    // подходящих в собственном каталоге. Виджет отдаёт результат наружу.
+    try {
+      window.parent?.postMessage(
+        {
+          type: 'podbor:match',
+          outcome: json.outcome,
+          message: json.message,
+          request: json.request,
+          cards: [...json.cards, ...json.softCards, ...json.nearestCards].map((c) => ({
+            id: c.id,
+            name: c.name,
+            category: c.category,
+            city: c.city,
+            priceFromKzt: c.priceFromKzt,
+            explanation: c.explanation,
+            relaxation: c.relaxation?.label,
+          })),
+        },
+        '*',
+      );
+    } catch {
+      /* виджет может быть открыт и без родителя */
+    }
+
+    // Меньше трёх — сразу говорим, чем можно расширить поиск.
+    if (json.cards.length + json.softCards.length + json.nearestCards.length < 3) {
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'bot',
+          text: 'Могу расширить поиск: назовите другую дату, поднимите бюджет или снимите формат — скажите словами, что менять.',
+        },
+      ]);
+    }
   }
 
   function restart() {

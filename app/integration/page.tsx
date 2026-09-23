@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Страница «как это встраивается» — демонстрация применимости.
@@ -11,7 +11,7 @@ import { useState } from 'react';
  */
 
 const IFRAME_SNIPPET = `<iframe
-  src="https://podbor.example.kz/embed?city=Алматы&category=Ведущий"
+  src="https://podbor.example.kz/embed?city=Алматы&category=Ведущий&date=2026-10-01"
   style="width:420px;height:640px;border:1px solid #e2e8f0;border-radius:12px"
   title="Подбор подрядчика"
 ></iframe>`;
@@ -28,8 +28,34 @@ const API_SNIPPET = `POST /api/match
 
 → { outcome, message, cards[], softCards[], nearestCards[], funnel[] }`;
 
+type MatchedCard = {
+  id: string; name: string; category: string; city: string;
+  priceFromKzt: number; explanation?: string; relaxation?: string;
+};
+
+type MatchMessage = {
+  type: string;
+  outcome: string;
+  message: string;
+  request: { city: string; category: string; date: string; eventFormat?: string; budgetKzt?: number };
+  cards: MatchedCard[];
+};
+
+const CATALOG_STUB = ['Куррапика', 'Мицури Канроджи', 'Джинбей', 'Хаул', 'Софи Хаттер'];
+
 export default function IntegrationPage() {
   const [tab, setTab] = useState<'iframe' | 'api'>('iframe');
+  const [matched, setMatched] = useState<MatchMessage | null>(null);
+
+  // Площадка слушает виджет и показывает подборку в своём каталоге, своими кнопками.
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      const data = e.data as MatchMessage | undefined;
+      if (data?.type === 'podbor:match') setMatched(data);
+    }
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
   const snippet = tab === 'iframe' ? IFRAME_SNIPPET : API_SNIPPET;
   const [copied, setCopied] = useState(false);
 
@@ -53,7 +79,7 @@ export default function IntegrationPage() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[1.45fr_1fr]">
         {/* Макет площадки-партнёра */}
         <section>
           <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -67,32 +93,74 @@ export default function IntegrationPage() {
               </nav>
             </div>
 
-            <div className="grid gap-4 p-4 md:grid-cols-[1fr_420px]">
+            <div className="grid gap-4 p-4 md:grid-cols-[1fr_400px]">
               <div>
-                <h2 className="text-sm font-semibold">Ведущие в Алматы</h2>
-                <p className="mb-3 text-xs text-slate-500">найдено 10 анкет</p>
-                <div className="space-y-2">
-                  {['Куррапика', 'Мицури Канроджи', 'Джинбей', 'Хаул', 'Софи Хаттер'].map((n) => (
-                    <div key={n} className="flex items-center gap-3 rounded-lg border border-slate-200 p-2">
-                      <div className="h-10 w-10 rounded bg-slate-200" />
-                      <div className="flex-1">
-                        <div className="text-sm">{n}</div>
-                        <div className="text-[11px] text-slate-400">Ведущий · Алматы</div>
-                      </div>
-                      <button className="rounded border border-slate-300 px-2 py-1 text-[11px]">Написать</button>
+                {matched ? (
+                  <>
+                    <h2 className="text-sm font-semibold">Подходят под ваш запрос</h2>
+                    <p className="text-[11px] text-slate-500">
+                      {matched.request.category} · {matched.request.city} · {matched.request.date}
+                      {matched.request.budgetKzt ? ` · до ${matched.request.budgetKzt.toLocaleString('ru-RU')} ₸` : ''}
+                    </p>
+                    <p className="mb-3 text-xs text-slate-500">
+                      {matched.cards.length > 0
+                        ? `${matched.cards.length} из каталога, отобраны виджетом`
+                        : 'подходящих нет — виджет объяснил почему'}
+                    </p>
+                    <div className="space-y-2">
+                      {matched.cards.map((c) => (
+                        <div key={c.id} className="rounded-lg border border-blue-200 bg-blue-50/40 p-2">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded bg-slate-200" />
+                            <div className="flex-1">
+                              <div className="text-sm">{c.name}</div>
+                              <div className="text-[11px] text-slate-400">
+                                {c.category} · {c.city} · {c.priceFromKzt.toLocaleString('ru-RU')} ₸
+                                {c.relaxation ? ` · ${c.relaxation}` : ''}
+                              </div>
+                            </div>
+                            <button className="rounded bg-blue-600 px-2 py-1 text-[11px] text-white">Написать</button>
+                          </div>
+                          {c.explanation && (
+                            <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{c.explanation}</p>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <p className="mt-3 text-[11px] text-slate-400">
-                  Обычный каталог: список анкет, в котором клиент сам перебирает,
-                  кто свободен на его дату и укладывается в бюджет.
-                </p>
+                    <p className="mt-3 text-[11px] text-slate-400">
+                      Каталог площадки обновился сам: виджет отдал подборку через postMessage,
+                      а карточки и кнопка «Написать» — собственные, площадки.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-sm font-semibold">Ведущие в Алматы</h2>
+                    <p className="mb-3 text-xs text-slate-500">найдено 10 анкет</p>
+                    <div className="space-y-2">
+                      {CATALOG_STUB.map((n) => (
+                        <div key={n} className="flex items-center gap-3 rounded-lg border border-slate-200 p-2">
+                          <div className="h-10 w-10 rounded bg-slate-200" />
+                          <div className="flex-1">
+                            <div className="text-sm">{n}</div>
+                            <div className="text-[11px] text-slate-400">Ведущий · Алматы</div>
+                          </div>
+                          <button className="rounded border border-slate-300 px-2 py-1 text-[11px]">Написать</button>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-3 text-[11px] text-slate-400">
+                      Обычный каталог: список анкет, в котором клиент сам перебирает,
+                      кто свободен на его дату и укладывается в бюджет.
+                      Ответьте виджету справа — список слева перестроится.
+                    </p>
+                  </>
+                )}
               </div>
 
               <div>
                 <div className="mb-1 text-[11px] text-slate-400">наш виджет, встроенный через iframe ↓</div>
                 <iframe
-                  src="/embed?city=Алматы&category=Ведущий"
+                  src="/embed?city=Алматы&category=Ведущий&format=корпоратив&date=2026-10-01&budget=1500000"
                   title="Подбор подрядчика"
                   className="h-[560px] w-full rounded-xl border border-slate-300"
                 />
