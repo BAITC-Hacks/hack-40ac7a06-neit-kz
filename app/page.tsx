@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import scenarios from '@/data/scenarios.json';
 import meta from '@/data/meta.json';
 import type { Card, MatchRequest, MatchResponse } from '@/lib/types';
@@ -46,6 +46,18 @@ export default function Home() {
   const [parsing, setParsing] = useState(false);
 
   const range = META.priceRanges[`${req.category}|${req.city}`];
+  const autoRan = useRef(false);
+
+  // ?s=S3 — сразу прогнать сценарий. Удобно для ссылок и для снятия скриншотов.
+  useEffect(() => {
+    if (autoRan.current) return;
+    const id = new URLSearchParams(window.location.search).get('s');
+    const scenario = SCENARIOS.find((x) => x.id.toLowerCase() === id?.toLowerCase());
+    if (!scenario) return;
+    autoRan.current = true;
+    runScenario(scenario);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function search(next: MatchRequest = req, wishes = wishText) {
     setLoading(true);

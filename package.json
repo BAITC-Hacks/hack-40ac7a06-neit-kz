@@ -9,7 +9,8 @@
     "lint": "eslint",
     "verify": "tsx scripts/verify.ts",
     "demo": "tsx scripts/demo.ts",
-    "build:golden": "tsx --env-file=.env.local scripts/verify.ts --update"
+    "build:golden": "tsx --env-file=.env.local scripts/verify.ts --update",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "next": "16.3.6",
