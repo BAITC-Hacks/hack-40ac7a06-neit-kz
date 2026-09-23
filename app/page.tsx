@@ -400,6 +400,8 @@ function CardView({ card, index, anon, soft }: { card: Card; index: number; anon
         {card.facts.wishChecks.map((w) => (
           <Chip key={w.wish} warn={!w.confirmed}>
             {w.wish}: {w.confirmed ? 'подтверждено' : 'не упомянуто в профиле'}
+            {w.source === 'semantic' && w.score !== undefined && ` · по смыслу ${w.score.toFixed(2)}`}
+            {w.source === 'lexical' && ' · по словам, семантика без ключа недоступна'}
           </Chip>
         ))}
       </div>

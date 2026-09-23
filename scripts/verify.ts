@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import scenarios from '../data/scenarios.json';
 import { match } from '../lib/match';
 import { explain } from '../lib/explain';
+import { resolveWishVectors } from '../lib/wish-vectors';
 import type { Card, MatchRequest } from '../lib/types';
 
 type Scenario = { id: string; title: string; req: MatchRequest };
@@ -38,7 +39,7 @@ function snapshotCard(c: Card) {
 }
 
 async function runScenario(s: Scenario) {
-  const r = match(s.req);
+  const r = match(s.req, await resolveWishVectors(s.req.wishes));
   const all = [...r.cards, ...r.softCards, ...r.nearestCards];
   const { texts, source } = await explain(all, s.req);
   const withText = (c: Card) => ({ ...c, explanation: texts[c.id] });

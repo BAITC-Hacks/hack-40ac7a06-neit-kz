@@ -59,6 +59,10 @@ export type WishCheck = {
   confirmed: boolean;
   /** фрагмент описания, подтверждающий пожелание */
   evidence?: string;
+  /** чем проверяли: семантикой (эмбеддинги), словами или нечем */
+  source: 'semantic' | 'lexical' | 'none';
+  /** близость по смыслу, если считали семантикой */
+  score?: number;
 };
 
 export type ScoreParts = {

@@ -10,7 +10,8 @@
     "verify": "tsx scripts/verify.ts",
     "demo": "tsx scripts/demo.ts",
     "build:golden": "tsx --env-file=.env.local scripts/verify.ts --update",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "build:embeddings": "tsx --env-file=.env.local scripts/build-embeddings.ts"
   },
   "dependencies": {
     "next": "16.3.6",

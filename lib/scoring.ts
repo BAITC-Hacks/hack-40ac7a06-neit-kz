@@ -1,4 +1,5 @@
 import { alsoListedAs, isLanguageCritical, nextFreeDate } from './catalog';
+import { bestSentence, WISH_MATCH_THRESHOLD } from './embeddings';
 import type { Contractor, Facts, MatchRequest, ScoreParts, WishCheck } from './types';
 
 /**
@@ -49,21 +50,42 @@ function sentences(text: string): string[] {
  * содержит не меньше половины значимых основ пожелания (минимум одну).
  * Порог намеренно консервативный: лучше честное «не упомянуто», чем выдуманное совпадение.
  */
-export function checkWishes(c: Contractor, wishes: string[] | undefined): WishCheck[] {
+export type WishVectors = Record<string, number[]>;
+
+/**
+ * Пожелание подтверждается семантикой, если ближайшее предложение описания
+ * достаточно близко по смыслу; порог 0.42 выбран замером на реальных парах
+ * (см. README). Вектора нет — падаем на словарное сравнение и честно это помечаем.
+ */
+export function checkWishes(
+  c: Contractor,
+  wishes: string[] | undefined,
+  vectors?: WishVectors,
+): WishCheck[] {
   if (!wishes?.length) return [];
   return wishes.map((wish) => {
+    const vec = vectors?.[wish];
+    if (vec) {
+      const best = bestSentence(c.id, vec);
+      const score = best ? Math.round(best.score * 1000) / 1000 : 0;
+      return best && score >= WISH_MATCH_THRESHOLD
+        ? { wish, confirmed: true, evidence: best.text, source: 'semantic' as const, score }
+        : { wish, confirmed: false, source: 'semantic' as const, score };
+    }
+
+    // Словарная подстраховка: совпадение основ слов в одном предложении.
     const need = [...stems(wish)];
-    if (need.length === 0) return { wish, confirmed: false };
-    let best: { hits: number; sentence: string } = { hits: 0, sentence: '' };
-    for (const s of sentences(c.description)) {
-      const have = stems(s);
+    if (need.length === 0) return { wish, confirmed: false, source: 'none' as const };
+    let bestHit = { hits: 0, sentence: '' };
+    for (const sentence of sentences(c.description)) {
+      const have = stems(sentence);
       const hits = need.filter((n) => have.has(n)).length;
-      if (hits > best.hits) best = { hits, sentence: s };
+      if (hits > bestHit.hits) bestHit = { hits, sentence };
     }
     const required = Math.max(1, Math.ceil(need.length / 2));
-    return best.hits >= required
-      ? { wish, confirmed: true, evidence: best.sentence }
-      : { wish, confirmed: false };
+    return bestHit.hits >= required
+      ? { wish, confirmed: true, evidence: bestHit.sentence, source: 'lexical' as const }
+      : { wish, confirmed: false, source: 'lexical' as const };
   });
 }
 

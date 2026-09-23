@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { match } from '@/lib/match';
 import { explain, templateExplanation } from '@/lib/explain';
+import { resolveWishVectors } from '@/lib/wish-vectors';
 import { META } from '@/lib/catalog';
 import type { MatchRequest } from '@/lib/types';
 
@@ -25,7 +26,9 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error }, { status: 400 });
   const { llm, ...rest } = body as MatchRequest & { llm?: boolean };
   const req = rest as MatchRequest;
-  const result = match(req);
+  // Векторы пожеланий: из кэша репозитория, при наличии ключа — считаются моделью.
+  const wishVectors = await resolveWishVectors(req.wishes);
+  const result = match(req, wishVectors);
   const all = [...result.cards, ...result.softCards, ...result.nearestCards];
   const { texts, source, issues } = llm === false
     ? { texts: Object.fromEntries(all.map((c) => [c.id, templateExplanation(c, req)])), source: 'template' as const, issues: [] }

@@ -3,7 +3,7 @@ import { estimateTravelCost } from './travel';
 import { assignDifferentiators } from './differentiators';
 import { applyFilters } from './filters';
 import { collectRelaxations, nearestCandidates, suggestBetterDate, type RelaxHit } from './relax';
-import { buildFacts, byScoreThenId, checkWishes, scoreParts, totalScore } from './scoring';
+import { buildFacts, byScoreThenId, checkWishes, scoreParts, totalScore, type WishVectors } from './scoring';
 import type { Card, Contractor, MatchRequest, MatchResponse } from './types';
 
 const MAX_CARDS_ON_SCREEN = 3;
@@ -37,8 +37,8 @@ function withTravel(hit: RelaxHit, req: MatchRequest): NonNullable<Card['relaxat
   };
 }
 
-function toCard(c: Contractor, req: MatchRequest, pool: Contractor[]): Card {
-  const checks = checkWishes(c, req.wishes);
+function toCard(c: Contractor, req: MatchRequest, pool: Contractor[], vectors?: WishVectors): Card {
+  const checks = checkWishes(c, req.wishes, vectors);
   const parts = scoreParts(c, req, checks);
   return {
     id: c.id,
@@ -119,13 +119,13 @@ function buildMessage(req: MatchRequest, res: Omit<MatchResponse, 'message'>): s
   }
 }
 
-export function match(req: MatchRequest): MatchResponse {
+export function match(req: MatchRequest, wishVectors?: WishVectors): MatchResponse {
   const started = Date.now();
   const filtered = applyFilters(req);
 
   const pool = filtered.survivors;
   const ranked = pool
-    .map((c) => toCard(c, req, pool))
+    .map((c) => toCard(c, req, pool, wishVectors))
     .sort(byScoreThenId)
     .slice(0, MAX_CARDS_ON_SCREEN);
 
@@ -136,7 +136,7 @@ export function match(req: MatchRequest): MatchResponse {
   const slots = MAX_CARDS_ON_SCREEN - cards.length;
   const hits = collectRelaxations(req, cards.map((c) => c.id), slots);
   const softRanked = hits.map((hit) => {
-    const card = toCard(hit.contractor, req, hits.map((h) => h.contractor));
+    const card = toCard(hit.contractor, req, hits.map((h) => h.contractor), wishVectors);
     return { ...card, relaxation: withTravel(hit, req) };
   });
   const softCards = assignDifferentiators(softRanked, descriptions).map((c, i) => ({
@@ -151,7 +151,7 @@ export function match(req: MatchRequest): MatchResponse {
       ? nearestCandidates(req, [...cards, ...softCards].map((c) => c.id), MAX_CARDS_ON_SCREEN - softCards.length)
       : [];
   const nearestRanked = nearestHits.map((hit) => {
-    const card = toCard(hit.contractor, req, nearestHits.map((h) => h.contractor));
+    const card = toCard(hit.contractor, req, nearestHits.map((h) => h.contractor), wishVectors);
     return { ...card, relaxation: withTravel(hit, req) };
   });
   const nearestCards = assignDifferentiators(nearestRanked, descriptions).map((c, i) => ({
