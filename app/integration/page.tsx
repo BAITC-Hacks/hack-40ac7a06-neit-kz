@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { formatRuDate, humanizeDates } from '@/lib/dates';
 
 /**
  * Страница «как это встраивается» — демонстрация применимости.
@@ -112,14 +113,14 @@ export default function IntegrationPage() {
                           <div className="mb-1 flex items-baseline gap-2">
                             <b className="text-xs">{pos.category}</b>
                             <span className="text-[11px] text-slate-400">
-                              {pos.request.city} · {pos.request.date}
+                              {pos.request.city} · {formatRuDate(pos.request.date)}
                               {pos.request.budgetKzt
                                 ? ` · до ${pos.request.budgetKzt.toLocaleString('ru-RU')} ₸`
                                 : ''}
                             </span>
                           </div>
                           {pos.cards.length === 0 && (
-                            <p className="text-[11px] text-slate-500">{pos.message}</p>
+                            <p className="text-[11px] text-slate-500">{humanizeDates(pos.message)}</p>
                           )}
                           <div className="space-y-2">
                             {pos.cards.map((c) => (
@@ -138,7 +139,7 @@ export default function IntegrationPage() {
                                   </button>
                                 </div>
                                 {c.explanation && (
-                                  <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{c.explanation}</p>
+                                  <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{humanizeDates(c.explanation)}</p>
                                 )}
                               </div>
                             ))}

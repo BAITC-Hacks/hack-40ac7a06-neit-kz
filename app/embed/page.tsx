@@ -35,6 +35,8 @@ type Brief = {
 type Message = { role: 'bot' | 'user'; text: string };
 type Result = { position: Position; data: MatchResponse };
 
+import { formatRuDate, humanizeDates } from '@/lib/dates';
+
 const money = (n: number) => `${n.toLocaleString('ru-RU')} ₸`;
 
 const OUTCOME_LABEL: Record<string, string> = {
@@ -248,7 +250,7 @@ function WidgetInner() {
                 m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-800'
               }`}
             >
-              {m.text}
+              {humanizeDates(m.text)}
             </span>
           </div>
         ))}
@@ -260,7 +262,7 @@ function WidgetInner() {
               <span className="text-[11px] text-slate-500">
                 {[
                   r.position.eventFormat,
-                  r.position.date,
+                  formatRuDate(r.position.date ?? ''),
                   r.position.budgetKzt ? `до ${money(r.position.budgetKzt)}` : null,
                 ]
                   .filter(Boolean)
@@ -268,7 +270,7 @@ function WidgetInner() {
               </span>
             </div>
             <div className="mb-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-700">
-              <b>{OUTCOME_LABEL[r.data.outcome] ?? r.data.outcome}.</b> {r.data.message}
+              <b>{OUTCOME_LABEL[r.data.outcome] ?? r.data.outcome}.</b> {humanizeDates(r.data.message)}
             </div>
             <div className="space-y-2">
               {[...r.data.cards, ...r.data.softCards, ...r.data.nearestCards].map((c) => (
@@ -311,7 +313,7 @@ function EmbedCard({ card }: { card: Card }) {
       <div className="text-xs text-slate-500">{card.category} · {card.city}</div>
       {card.relaxation && (
         <div className="mt-1 text-xs text-amber-900">
-          <b>{card.relaxation.label}.</b> {card.relaxation.detail}
+          <b>{card.relaxation.label}.</b> {humanizeDates(card.relaxation.detail)}
         </div>
       )}
       {card.relaxation?.travel && (
@@ -319,7 +321,7 @@ function EmbedCard({ card }: { card: Card }) {
           ✈️ проезд от {money(card.relaxation.travel.totalKzt)} на {card.relaxation.travel.headcount} чел.
         </div>
       )}
-      {card.explanation && <p className="mt-1 text-xs leading-relaxed">{card.explanation}</p>}
+      {card.explanation && <p className="mt-1 text-xs leading-relaxed">{humanizeDates(card.explanation)}</p>}
     </article>
   );
 }

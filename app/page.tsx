@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import scenarios from '@/data/scenarios.json';
 import meta from '@/data/meta.json';
 import type { Card, MatchRequest, MatchResponse } from '@/lib/types';
+import { humanizeDates } from '@/lib/dates';
 
 type Scenario = { id: string; title: string; req: MatchRequest };
 type Position = {
@@ -253,7 +254,7 @@ export default function Home() {
                   {brief.positions.map((p) => (
                     <li key={p.category}>
                       {brief.positions.length > 1 && '• '}
-                      {p.summary}
+                      {humanizeDates(p.summary)}
                       {p.wishes.length > 0 && (
                         <span style={{ color: 'var(--muted)' }}> · пожелания: {p.wishes.join(', ')}</span>
                       )}
@@ -266,7 +267,7 @@ export default function Home() {
 
               {(brief.notes ?? []).map((n) => (
                 <div key={n} className="mt-2.5 text-[13px]" style={{ color: 'var(--warn)' }}>
-                  ⚠ {n}
+                  ⚠ {humanizeDates(n)}
                 </div>
               ))}
 
@@ -280,7 +281,7 @@ export default function Home() {
 
               {brief.question && (
                 <div className="mt-2.5 text-[13px]" style={{ color: 'var(--muted)' }}>
-                  {brief.question}
+                  {humanizeDates(brief.question)}
                 </div>
               )}
 
@@ -395,12 +396,12 @@ function ResultBlock({
 
             <div className={`outcome mt-9 ${outcome.tone}`}>
               <span className="outcome-tag">{outcome.title}</span>
-              <p>{data.message}</p>
+              <p>{humanizeDates(data.message)}</p>
             </div>
 
             {data.notes.length > 0 && (
               <ul className="mt-3 space-y-1 text-[13px]" style={{ color: 'var(--warn)' }}>
-                {data.notes.map((n) => <li key={n}>⚠ {n}</li>)}
+                {data.notes.map((n) => <li key={n}>⚠ {humanizeDates(n)}</li>)}
               </ul>
             )}
 
@@ -463,7 +464,7 @@ function ResultBlock({
                   <li key={f.step} className={f.after === 0 ? 'step-zero' : undefined}>
                     <span className="step-n">{f.after}</span> <span className="step-name">{f.step}</span>
                     {f.dropped > 0 && <span className="step-drop"> −{f.dropped}</span>}
-                    <span className="step-why">{f.reason}</span>
+                    <span className="step-why">{humanizeDates(f.reason)}</span>
                   </li>
                 ))}
               </ul>
@@ -475,7 +476,7 @@ function ResultBlock({
                     {data.nearMisses.map((n) => (
                       <li key={n.id}>
                         <span className="rej-who">{anon ? n.id : n.name}</span>
-                        <span className="rej-why">{n.reason}</span>
+                        <span className="rej-why">{humanizeDates(n.reason)}</span>
                       </li>
                     ))}
                   </ul>
@@ -519,7 +520,7 @@ function CardView({ card, index, anon, soft }: { card: Card; index: number; anon
 
       {card.relaxation && (
         <p className="relax">
-          <b>{card.relaxation.label}.</b> {card.relaxation.detail}
+          <b>{card.relaxation.label}.</b> {humanizeDates(card.relaxation.detail)}
         </p>
       )}
 
@@ -541,7 +542,7 @@ function CardView({ card, index, anon, soft }: { card: Card; index: number; anon
         </div>
       )}
 
-      {card.explanation && <p className="card-why">{card.explanation}</p>}
+      {card.explanation && <p className="card-why">{humanizeDates(card.explanation)}</p>}
 
       <div className="chips">
         {card.facts.hoursSpare !== undefined && <Chip>запас {card.facts.hoursSpare} ч</Chip>}
