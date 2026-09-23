@@ -63,6 +63,7 @@
   }
  ],
  "softCards": [],
+ "nearestCards": [],
  "funnel": [
   {
    "step": "город",

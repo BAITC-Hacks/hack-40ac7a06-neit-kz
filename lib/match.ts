@@ -1,7 +1,7 @@
 import { CONTRACTORS, priceRange } from './catalog';
 import { assignDifferentiators } from './differentiators';
 import { applyFilters } from './filters';
-import { collectRelaxations, suggestBetterDate } from './relax';
+import { collectRelaxations, nearestCandidates, suggestBetterDate } from './relax';
 import { buildFacts, byScoreThenId, checkWishes, scoreParts, totalScore } from './scoring';
 import type { Card, Contractor, MatchRequest, MatchResponse } from './types';
 
@@ -127,6 +127,21 @@ export function match(req: MatchRequest): MatchResponse {
     relaxation: softRanked[i].relaxation,
   }));
 
+  // Если не прошёл вообще никто — показываем ближайшее, что есть в каталоге,
+  // с честной величиной расхождения. Пустой экран бесполезен.
+  const nearestHits =
+    cards.length === 0
+      ? nearestCandidates(req, [...cards, ...softCards].map((c) => c.id), MAX_CARDS_ON_SCREEN - softCards.length)
+      : [];
+  const nearestRanked = nearestHits.map((hit) => {
+    const card = toCard(hit.contractor, req, nearestHits.map((h) => h.contractor));
+    return { ...card, relaxation: { rule: hit.rule, label: hit.label, detail: hit.detail } };
+  });
+  const nearestCards = assignDifferentiators(nearestRanked, descriptions).map((c, i) => ({
+    ...c,
+    relaxation: nearestRanked[i].relaxation,
+  }));
+
   const notes: string[] = [];
   if (!req.budgetKzt) {
     const r = priceRange(req.category, req.city);
@@ -137,10 +152,10 @@ export function match(req: MatchRequest): MatchResponse {
     );
   }
   if (req.language && !cards.length) notes.push('Язык учитывался как пожелание, а не как жёсткий фильтр.');
-  if ([...cards, ...softCards].some((c) => c.facts.synthetic)) {
+  if ([...cards, ...softCards, ...nearestCards].some((c) => c.facts.synthetic)) {
     notes.push('В выдаче есть профили, помеченные в датасете как синтетические — они отмечены в карточке.');
   }
-  if ([...cards, ...softCards].some((c) => c.facts.priceImputed)) {
+  if ([...cards, ...softCards, ...nearestCards].some((c) => c.facts.priceImputed)) {
     notes.push('У части профилей цена в каталоге ориентировочная, а не заявленная подрядчиком.');
   }
 
@@ -148,6 +163,7 @@ export function match(req: MatchRequest): MatchResponse {
     outcome: filtered.outcome,
     cards,
     softCards,
+    nearestCards,
     funnel: filtered.funnel,
     nearMisses: filtered.nearMisses.slice(0, 3),
     request: req,

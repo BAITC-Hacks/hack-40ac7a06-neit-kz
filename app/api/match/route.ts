@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const { llm, ...rest } = body as MatchRequest & { llm?: boolean };
   const req = rest as MatchRequest;
   const result = match(req);
-  const all = [...result.cards, ...result.softCards];
+  const all = [...result.cards, ...result.softCards, ...result.nearestCards];
   const { texts, source, issues } = llm === false
     ? { texts: Object.fromEntries(all.map((c) => [c.id, templateExplanation(c, req)])), source: 'template' as const, issues: [] }
     : await explain(all, req);
@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     ...result,
     cards: result.cards.map((c) => ({ ...c, explanation: texts[c.id] })),
     softCards: result.softCards.map((c) => ({ ...c, explanation: texts[c.id] })),
+    nearestCards: result.nearestCards.map((c) => ({ ...c, explanation: texts[c.id] })),
     explanationSource: source,
     explanationIssues: issues,
   });

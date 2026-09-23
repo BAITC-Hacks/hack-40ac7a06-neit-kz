@@ -36,7 +36,7 @@ function snapshotCard(c: Card) {
 
 async function runScenario(s: Scenario) {
   const r = match(s.req);
-  const all = [...r.cards, ...r.softCards];
+  const all = [...r.cards, ...r.softCards, ...r.nearestCards];
   const { texts, source } = await explain(all, s.req);
   const withText = (c: Card) => ({ ...c, explanation: texts[c.id] });
   return {
@@ -47,6 +47,7 @@ async function runScenario(s: Scenario) {
       message: r.message,
       cards: r.cards.map(withText).map(snapshotCard),
       softCards: r.softCards.map(withText).map(snapshotCard),
+      nearestCards: r.nearestCards.map(withText).map(snapshotCard),
       funnel: r.funnel,
       nearMisses: r.nearMisses,
       notes: r.notes,
@@ -100,10 +101,10 @@ async function main() {
       }
     }
 
-    const line = `| ${s.id} | ${s.title} | ${snapshot.outcome} | ${snapshot.cards.length} + ${snapshot.softCards.length} | ${ms} мс | ${source} | ${status} |`;
+    const line = `| ${s.id} | ${s.title} | ${snapshot.outcome} | ${snapshot.cards.length} + ${snapshot.softCards.length} + ${snapshot.nearestCards.length} | ${ms} мс | ${source} | ${status} |`;
     rows.push(line);
     console.log(
-      `${status.padEnd(15)} ${s.id}  ${snapshot.outcome.padEnd(20)} карточек ${snapshot.cards.length}+${snapshot.softCards.length}  ${ms} мс  (${source})`,
+      `${status.padEnd(15)} ${s.id}  ${snapshot.outcome.padEnd(20)} карточек ${snapshot.cards.length}+${snapshot.softCards.length}+${snapshot.nearestCards.length}  ${ms} мс  (${source})`,
     );
   }
 
@@ -112,7 +113,7 @@ async function main() {
     '',
     'Сгенерирован `npm run verify`. Тайминги в эталоны не входят.',
     '',
-    '| # | Сценарий | Исход | Карточек (основных + послабления) | Время | Объяснения | Статус |',
+    '| # | Сценарий | Исход | Карточек (основные + послабления + ближайшие) | Время | Объяснения | Статус |',
     '|---|---|---|---|---|---|---|',
     ...rows,
     '',

@@ -11,6 +11,77 @@
  "message": "В городе Алматы формат «корпоратив» в категории «Ведущий» берут 9. Из них 9 заняты 2026-12-12. Никто не проходит по всем условиям. Если дата гибкая: 2026-12-09 подходящих 4.",
  "cards": [],
  "softCards": [],
+ "nearestCards": [
+  {
+   "id": "HK-27222",
+   "name": "Сон Гоку",
+   "priceFromKzt": 1000000,
+   "score": 0.3744,
+   "explanation": "Сон Гоку ведёт на казахском и русском языках и имеет более 12 лет опыта. Занят 2026-12-12, свободен 2026-12-11 — на 1 день раньше.",
+   "differentiators": [
+    {
+     "axis": "languages",
+     "value": "языки: казахский, русский",
+     "tier": 1
+    },
+    {
+     "axis": "experience",
+     "value": "более 12 лет опыта",
+     "tier": 1
+    }
+   ],
+   "relaxation": "NEAREST",
+   "wishChecks": [],
+   "synthetic": false,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-44733",
+   "name": "Буллма",
+   "priceFromKzt": 1000000,
+   "score": 0.3744,
+   "explanation": "Буллма говорит на английском и русском, с опытом более 10 лет. Занят 2026-12-12, свободен 2026-12-13 — на 1 день позже.",
+   "differentiators": [
+    {
+     "axis": "languages",
+     "value": "языки: английский, русский",
+     "tier": 1
+    },
+    {
+     "axis": "experience",
+     "value": "более 10 лет опыта",
+     "tier": 1
+    }
+   ],
+   "relaxation": "NEAREST",
+   "wishChecks": [],
+   "synthetic": false,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-35215",
+   "name": "Кики",
+   "priceFromKzt": 900000,
+   "score": 0.3897,
+   "explanation": "Отличие: языки: английский, казахский, русский. Цена 900 000 ₸ — остаётся 600 000 ₸ от бюджета.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 900 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "languages",
+     "value": "языки: английский, казахский, русский",
+     "tier": 1
+    }
+   ],
+   "relaxation": "NEAREST",
+   "wishChecks": [],
+   "synthetic": false,
+   "priceImputed": false
+  }
+ ],
  "funnel": [
   {
    "step": "город",

@@ -274,6 +274,21 @@ export default function Home() {
             </section>
           )}
 
+          {data.nearestCards.length > 0 && (
+            <section className="mb-6">
+              <h2 className="mb-1 text-sm font-semibold">Ближайшее, что есть в каталоге</h2>
+              <p className="mb-2 text-xs text-slate-500">
+                Под ваши условия не подходит никто. Показываем ближайшие варианты и честно называем,
+                насколько они расходятся с запросом.
+              </p>
+              <div className="grid gap-3">
+                {data.nearestCards.map((c, i) => (
+                  <CardView key={c.id} card={c} index={i} anon={anon} soft />
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="rounded-lg border border-slate-200 bg-white p-4">
             <h2 className="mb-3 text-sm font-semibold">Как мы отбирали</h2>
             <div className="flex flex-wrap items-center gap-1 text-xs">

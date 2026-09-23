@@ -13,6 +13,7 @@ import type { Contractor, MatchRequest } from './types';
  */
 
 export type RelaxRule =
+  | 'NEAREST'
   | 'SOFT_DATE'
   | 'NEIGHBOUR_FORMAT'
   | 'FLY_IN'
@@ -27,6 +28,25 @@ export type RelaxHit = {
 };
 
 const FLY_IN_MIN_FEE = 1_000_000;
+
+/** Предложный падеж города: «не в Астане», а не «не в Астана». */
+const CITY_IN: Record<string, string> = {
+  'Алматы': 'Алматы',
+  'Астана': 'Астане',
+  'Зарубежье': 'Зарубежье',
+};
+const cityIn = (city: string): string => CITY_IN[city] ?? city;
+
+/** «в 4,5 раза» / «в 5 раз» — без «в 5,0 раза». */
+function timesLabel(times: number): string {
+  const rounded = Math.round(times * 10) / 10;
+  if (Number.isInteger(rounded)) {
+    const n = rounded % 100;
+    const tail = n >= 5 && n <= 20 ? 'раз' : [0, 1].includes(n % 10) ? 'раза' : n % 10 <= 4 ? 'раза' : 'раз';
+    return `в ${rounded} ${tail}`;
+  }
+  return `в ${rounded.toFixed(1).replace('.', ',')} раза`;
+}
 
 function passesBase(c: Contractor, req: MatchRequest, opts: { skipDate?: boolean; skipCity?: boolean; skipFormat?: boolean; skipBudget?: boolean } = {}): boolean {
   if (!opts.skipCity && c.city !== req.city) return false;
@@ -190,6 +210,95 @@ export function collectRelaxations(req: MatchRequest, alreadyShown: string[], sl
     }
   }
   return out;
+}
+
+/**
+ * Ближайшие по параметрам — когда не проходит вообще никто.
+ *
+ * Показываем то, что есть в каталоге, с честной величиной расхождения:
+ * «дороже бюджета в 4,5 раза», «свободен 14 декабря — на день раньше».
+ * Это не подмена ответа: карточки идут отдельным блоком и каждая называет свою цену компромисса.
+ */
+export function nearestCandidates(req: MatchRequest, alreadyShown: string[], limit: number): RelaxHit[] {
+  if (limit <= 0) return [];
+  const exclude = new Set(alreadyShown);
+
+  let pool = CONTRACTORS.filter((c) => !exclude.has(c.id) && c.categories.includes(req.category));
+  if (pool.length === 0) return [];
+
+  const scored = pool.map((c) => {
+    const gaps: string[] = [];
+    let distance = 0;
+
+    if (req.budgetKzt && c.priceFromKzt > req.budgetKzt) {
+      const over = c.priceFromKzt - req.budgetKzt;
+      const times = c.priceFromKzt / req.budgetKzt;
+      distance += over / req.budgetKzt;
+      gaps.push(
+        times >= 2
+          ? `дороже бюджета ${timesLabel(times)} (${c.priceFromKzt.toLocaleString('ru-RU')} ₸ против ${req.budgetKzt.toLocaleString('ru-RU')} ₸)`
+          : `дороже бюджета на ${over.toLocaleString('ru-RU')} ₸`,
+      );
+    }
+
+    if (!isFree(c, req.date)) {
+      const shift = nearestFreeShift(c, req.date);
+      if (shift === undefined) {
+        distance += 5;
+        gaps.push('занят и в ближайшую неделю до и после даты');
+      } else {
+        distance += Math.abs(shift) * 0.15;
+        const day = shiftDate(req.date, shift);
+        gaps.push(
+          shift < 0
+            ? `занят ${req.date}, свободен ${day} — на ${Math.abs(shift)} дн. раньше`
+            : `занят ${req.date}, свободен ${day} — на ${shift} дн. позже`,
+        );
+      }
+    }
+
+    if (req.eventFormat && !c.eventFormats.includes(req.eventFormat)) {
+      distance += 0.6;
+      gaps.push(`в анкете нет формата «${req.eventFormat}», указаны: ${c.eventFormats.join(', ')}`);
+    }
+
+    if (c.city !== req.city) {
+      distance += 0.8;
+      gaps.push(`работает в городе ${c.city}, не в ${cityIn(req.city)}`);
+    }
+
+    if (req.durationHours && c.maxHours !== null && c.maxHours < req.durationHours) {
+      distance += 0.3;
+      gaps.push(`берёт до ${c.maxHours} ч вместо ${req.durationHours}`);
+    }
+
+    return { c, distance, gaps };
+  });
+
+  scored.sort((a, b) =>
+    a.distance === b.distance ? a.c.id.localeCompare(b.c.id) : a.distance - b.distance,
+  );
+
+  return scored.slice(0, limit).map(({ c, gaps }) => ({
+    contractor: c,
+    rule: 'NEAREST' as const,
+    label: gaps.length ? 'ближайший вариант с оговорками' : 'ближайший вариант',
+    detail: gaps.length
+      ? `Под ваши условия не подходит: ${gaps.join('; ')}.`
+      : 'Подходит по всем параметрам, кроме тех, что мы не проверяли.',
+  }));
+}
+
+/** Сдвиг до ближайшей свободной даты в пределах недели: назад приоритетнее. */
+function nearestFreeShift(c: Contractor, date: string): number | undefined {
+  for (let d = 1; d <= 7; d++) {
+    for (const shift of [-d, d]) {
+      const day = shiftDate(date, shift);
+      if (day < META.dateWindow.from || day > META.dateWindow.to) continue;
+      if (isFree(c, day)) return shift;
+    }
+  }
+  return undefined;
 }
 
 /** Подсказка для гибкого по дате клиента: когда выдача станет полной. */

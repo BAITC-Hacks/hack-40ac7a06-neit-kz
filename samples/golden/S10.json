@@ -1,0 +1,159 @@
+{
+ "id": "S10",
+ "request": {
+  "city": "Алматы",
+  "category": "Декоратор",
+  "eventFormat": "свадьба",
+  "date": "2026-12-15",
+  "budgetKzt": 400000
+ },
+ "outcome": "NO_ONE_PASSES",
+ "message": "В городе Алматы формат «свадьба» в категории «Декоратор» берут 3. Из них 1 занят 2026-12-15, у 2 подрядчиков цена выше бюджета 400 000 ₸. Никто не проходит по всем условиям.",
+ "cards": [],
+ "softCards": [],
+ "nearestCards": [
+  {
+   "id": "HK-90003",
+   "name": "Усопп",
+   "priceFromKzt": 1800000,
+   "score": 0.3385,
+   "explanation": "Усопп — узкий специалист, берёт всего 2 формата и работает только на русском языке; цена 1 800 000 ₸, что в 4,5 раза превышает ваш бюджет.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 1 800 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "formats",
+     "value": "узкий специалист: берёт всего 2 формата",
+     "tier": 1
+    }
+   ],
+   "relaxation": "NEAREST",
+   "wishChecks": [],
+   "synthetic": true,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-11484",
+   "name": "Уинри Рокбелл",
+   "priceFromKzt": 2000000,
+   "score": 0.3949,
+   "explanation": "Уинри Рокбелл имеет более 5 лет опыта и награды, говорит на русском и английском; цена 2 000 000 ₸, что в 5 раз дороже вашего бюджета.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 2 000 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "languages",
+     "value": "языки: английский, русский",
+     "tier": 1
+    }
+   ],
+   "relaxation": "NEAREST",
+   "wishChecks": [],
+   "synthetic": false,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-90004",
+   "name": "Франки",
+   "priceFromKzt": 2200000,
+   "score": 0.3436,
+   "explanation": "Франки — награждённый декоратор, работающий на русском языке; цена 2 200 000 ₸, что в 5,5 раза превышает бюджет, и свободен только с 2026-12-20, через 5 дней после нужной даты.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 2 200 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "experience",
+     "value": "есть награды",
+     "tier": 1
+    }
+   ],
+   "relaxation": "NEAREST",
+   "wishChecks": [],
+   "synthetic": true,
+   "priceImputed": false
+  }
+ ],
+ "funnel": [
+  {
+   "step": "город",
+   "before": 66,
+   "after": 50,
+   "dropped": 16,
+   "reason": "город «Алматы»"
+  },
+  {
+   "step": "категория",
+   "before": 50,
+   "after": 3,
+   "dropped": 47,
+   "reason": "категория «Декоратор»"
+  },
+  {
+   "step": "формат",
+   "before": 3,
+   "after": 3,
+   "dropped": 0,
+   "reason": "берёт «свадьба»"
+  },
+  {
+   "step": "свободен",
+   "before": 3,
+   "after": 2,
+   "dropped": 1,
+   "reason": "свободен 2026-12-15"
+  },
+  {
+   "step": "бюджет",
+   "before": 2,
+   "after": 0,
+   "dropped": 2,
+   "reason": "цена до 400 000 ₸"
+  },
+  {
+   "step": "язык",
+   "before": 0,
+   "after": 0,
+   "dropped": 0,
+   "reason": "язык не указан"
+  },
+  {
+   "step": "длительность",
+   "before": 0,
+   "after": 0,
+   "dropped": 0,
+   "reason": "длительность не указана"
+  }
+ ],
+ "nearMisses": [
+  {
+   "id": "HK-90004",
+   "name": "Франки",
+   "droppedAt": "свободен",
+   "reason": "занят 2026-12-15"
+  },
+  {
+   "id": "HK-11484",
+   "name": "Уинри Рокбелл",
+   "droppedAt": "бюджет",
+   "reason": "2 000 000 ₸ при вашем 400 000 ₸"
+  },
+  {
+   "id": "HK-90003",
+   "name": "Усопп",
+   "droppedAt": "бюджет",
+   "reason": "1 800 000 ₸ при вашем 400 000 ₸"
+  }
+ ],
+ "notes": [
+  "В выдаче есть профили, помеченные в датасете как синтетические — они отмечены в карточке."
+ ]
+}

@@ -105,7 +105,7 @@ export type Card = {
   explanation?: string;
   /** для карточек из блока послаблений */
   relaxation?: {
-    rule: 'SOFT_DATE' | 'NEIGHBOUR_FORMAT' | 'FLY_IN' | 'BUDGET_STRETCH' | 'DURATION_STRETCH';
+    rule: 'NEAREST' | 'SOFT_DATE' | 'NEIGHBOUR_FORMAT' | 'FLY_IN' | 'BUDGET_STRETCH' | 'DURATION_STRETCH';
     label: string;
     detail: string;
   };
@@ -116,6 +116,8 @@ export type MatchResponse = {
   message: string;
   cards: Card[];
   softCards: Card[];
+  /** ближайшие по параметрам — показываются, когда не прошёл никто */
+  nearestCards: Card[];
   funnel: FunnelStep[];
   nearMisses: NearMiss[];
   request: MatchRequest;
