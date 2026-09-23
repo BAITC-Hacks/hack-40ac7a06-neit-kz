@@ -1,0 +1,74 @@
+{
+ "id": "S7",
+ "request": {
+  "city": "Астана",
+  "category": "Банкетный зал",
+  "eventFormat": "свадьба",
+  "date": "2026-11-14",
+  "budgetKzt": 300000
+ },
+ "outcome": "NO_ONE_PASSES",
+ "message": "В городе Астана формат «свадьба» в категории «Банкетный зал» берут 1. Из них 1 занят 2026-11-14. Никто не проходит по всем условиям.",
+ "cards": [],
+ "softCards": [],
+ "funnel": [
+  {
+   "step": "город",
+   "before": 66,
+   "after": 15,
+   "dropped": 51,
+   "reason": "город «Астана»"
+  },
+  {
+   "step": "категория",
+   "before": 15,
+   "after": 1,
+   "dropped": 14,
+   "reason": "категория «Банкетный зал»"
+  },
+  {
+   "step": "формат",
+   "before": 1,
+   "after": 1,
+   "dropped": 0,
+   "reason": "берёт «свадьба»"
+  },
+  {
+   "step": "свободен",
+   "before": 1,
+   "after": 0,
+   "dropped": 1,
+   "reason": "свободен 2026-11-14"
+  },
+  {
+   "step": "бюджет",
+   "before": 0,
+   "after": 0,
+   "dropped": 0,
+   "reason": "цена до 300 000 ₸"
+  },
+  {
+   "step": "язык",
+   "before": 0,
+   "after": 0,
+   "dropped": 0,
+   "reason": "язык не указан"
+  },
+  {
+   "step": "длительность",
+   "before": 0,
+   "after": 0,
+   "dropped": 0,
+   "reason": "длительность не указана"
+  }
+ ],
+ "nearMisses": [
+  {
+   "id": "HK-90012",
+   "name": "Веджита",
+   "droppedAt": "свободен",
+   "reason": "занят 2026-11-14"
+  }
+ ],
+ "notes": []
+}

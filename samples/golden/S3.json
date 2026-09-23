@@ -1,0 +1,126 @@
+{
+ "id": "S3",
+ "request": {
+  "city": "Алматы",
+  "category": "Национальный ансамбль",
+  "eventFormat": "той",
+  "date": "2026-10-09",
+  "budgetKzt": 600000
+ },
+ "outcome": "MATCHED",
+ "message": "Подобрали 3 из 4, кто берёт «той» в городе Алматы. Отсеяны: 1 занят на дату.",
+ "cards": [
+  {
+   "id": "HK-36965",
+   "name": "Эдвард Ван Хог",
+   "priceFromKzt": 500000,
+   "score": 0.3308,
+   "explanation": "Эдвард Ван Хог выступает на вашем торжестве и прославляет казахскую песню на весь мир, цена 500000 KZT.",
+   "differentiators": [
+    {
+     "axis": "description",
+     "value": "Выступаем на вашем торжестве Прославляем казахскую песню на весь мир",
+     "tier": 2
+    }
+   ],
+   "wishChecks": [],
+   "synthetic": false,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-39301",
+   "name": "Рамь",
+   "priceFromKzt": 500000,
+   "score": 0.3308,
+   "explanation": "Рамь — ансамбль №1 в Казахстане с авторским проектом Ичиго и Рукии, впервые выступивший перед главой государства, цена 500000 KZT.",
+   "differentiators": [
+    {
+     "axis": "description",
+     "value": "Ансамбль №1 в Казахстане Авторский проект Ичиго и Рукии, впервые выступивший перед главой государства",
+     "tier": 2
+    }
+   ],
+   "wishChecks": [],
+   "synthetic": false,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-92824",
+   "name": "Поньо",
+   "priceFromKzt": 500000,
+   "score": 0.3308,
+   "explanation": "Поньо — авторский проект Ичиго и Рукии, ансамбль Sailor Dala гармонично сочетает песню и красоту, цена 500000 KZT.",
+   "differentiators": [
+    {
+     "axis": "description",
+     "value": "Авторский проект Ичиго и Рукии Гармония песни и красоты Ансамбль Sailor Dala, который украсит ваше торжество",
+     "tier": 2
+    }
+   ],
+   "wishChecks": [],
+   "synthetic": false,
+   "priceImputed": false
+  }
+ ],
+ "softCards": [],
+ "funnel": [
+  {
+   "step": "город",
+   "before": 66,
+   "after": 50,
+   "dropped": 16,
+   "reason": "город «Алматы»"
+  },
+  {
+   "step": "категория",
+   "before": 50,
+   "after": 4,
+   "dropped": 46,
+   "reason": "категория «Национальный ансамбль»"
+  },
+  {
+   "step": "формат",
+   "before": 4,
+   "after": 4,
+   "dropped": 0,
+   "reason": "берёт «той»"
+  },
+  {
+   "step": "свободен",
+   "before": 4,
+   "after": 3,
+   "dropped": 1,
+   "reason": "свободен 2026-10-09"
+  },
+  {
+   "step": "бюджет",
+   "before": 3,
+   "after": 3,
+   "dropped": 0,
+   "reason": "цена до 600 000 ₸"
+  },
+  {
+   "step": "язык",
+   "before": 3,
+   "after": 3,
+   "dropped": 0,
+   "reason": "язык не указан"
+  },
+  {
+   "step": "длительность",
+   "before": 3,
+   "after": 3,
+   "dropped": 0,
+   "reason": "длительность не указана"
+  }
+ ],
+ "nearMisses": [
+  {
+   "id": "HK-19103",
+   "name": "Мэй Кусакабэ",
+   "droppedAt": "свободен",
+   "reason": "занят 2026-10-09"
+  }
+ ],
+ "notes": []
+}

@@ -1,0 +1,79 @@
+{
+ "id": "S6",
+ "request": {
+  "city": "Астана",
+  "category": "Лайв-бэнд",
+  "eventFormat": "корпоратив",
+  "date": "2026-09-25",
+  "budgetKzt": 2500000
+ },
+ "outcome": "NO_CATEGORY_IN_CITY",
+ "message": "В каталоге нет категории «Лайв-бэнд» в городе Астана. Всего таких подрядчиков 5, и все они в Алматы.",
+ "cards": [],
+ "softCards": [
+  {
+   "id": "HK-23752",
+   "name": "Дзэнъицу Агацума",
+   "priceFromKzt": 1150000,
+   "score": 0.3708,
+   "explanation": "Дзэнъицу Агацума говорит на казахском и русском языках и работает с четырьмя из шести форматов мероприятий. Гонорар 1 150 000 ₸ не включает перелёт и проживание, которые считаются отдельной статьёй расходов.",
+   "differentiators": [
+    {
+     "axis": "languages",
+     "value": "языки: казахский, русский",
+     "tier": 1
+    },
+    {
+     "axis": "formats",
+     "value": "берёт 4 форматов из 6",
+     "tier": 1
+    }
+   ],
+   "relaxation": "FLY_IN",
+   "wishChecks": [],
+   "synthetic": false,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-31819",
+   "name": "Каору Камия",
+   "priceFromKzt": 1150000,
+   "score": 0.4169,
+   "explanation": "Каору Камия владеет английским и русским языками и принимает участие в трёх из шести форматов. Цена 1 150 000 ₸ не покрывает перелёт и проживание, которые оплачиваются отдельно.",
+   "differentiators": [
+    {
+     "axis": "languages",
+     "value": "языки: английский, русский",
+     "tier": 1
+    },
+    {
+     "axis": "formats",
+     "value": "берёт 3 форматов из 6",
+     "tier": 1
+    }
+   ],
+   "relaxation": "FLY_IN",
+   "wishChecks": [],
+   "synthetic": false,
+   "priceImputed": false
+  }
+ ],
+ "funnel": [
+  {
+   "step": "город",
+   "before": 66,
+   "after": 15,
+   "dropped": 51,
+   "reason": "город «Астана»"
+  },
+  {
+   "step": "категория",
+   "before": 15,
+   "after": 0,
+   "dropped": 15,
+   "reason": "категория «Лайв-бэнд»"
+  }
+ ],
+ "nearMisses": [],
+ "notes": []
+}
