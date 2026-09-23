@@ -6,6 +6,13 @@ import meta from '@/data/meta.json';
 import type { Card, MatchRequest, MatchResponse } from '@/lib/types';
 
 type Scenario = { id: string; title: string; req: MatchRequest };
+type ParsedRequest = {
+  city?: string; date?: string; category?: string; eventFormat?: string;
+  budgetKzt?: number; durationHours?: number; language?: string;
+  wishes: string[]; missing: string[];
+  unsupported: Array<{ quote: string; reason: string }>;
+  question?: string; summary: string;
+};
 type ApiResponse = MatchResponse & { explanationSource?: string };
 
 const SCENARIOS = scenarios as Scenario[];
@@ -34,6 +41,9 @@ export default function Home() {
   const [anon, setAnon] = useState(false);
   const [useLlm, setUseLlm] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [chatText, setChatText] = useState('');
+  const [parsed, setParsed] = useState<ParsedRequest | null>(null);
+  const [parsing, setParsing] = useState(false);
 
   const range = META.priceRanges[`${req.category}|${req.city}`];
 
@@ -61,6 +71,44 @@ export default function Home() {
     }
   }
 
+  async function parseChat() {
+    if (chatText.trim().length < 3) return;
+    setParsing(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/parse', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text: chatText }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Не удалось разобрать запрос');
+      setParsed(json as ParsedRequest);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка');
+    } finally {
+      setParsing(false);
+    }
+  }
+
+  /** Подтверждение: переносим разобранное в форму. Поиск идёт от подтверждённой структуры. */
+  function applyParsed() {
+    if (!parsed) return;
+    const next: MatchRequest = {
+      city: parsed.city ?? req.city,
+      category: parsed.category ?? req.category,
+      date: parsed.date ?? req.date,
+      eventFormat: parsed.eventFormat,
+      budgetKzt: parsed.budgetKzt,
+      durationHours: parsed.durationHours,
+      language: parsed.language,
+    };
+    const wishes = parsed.wishes.join(', ');
+    setReq(next);
+    setWishText(wishes);
+    void search(next, wishes);
+  }
+
   function runScenario(s: Scenario) {
     const wishes = s.req.wishes?.join(', ') ?? '';
     setReq(s.req);
@@ -76,6 +124,60 @@ export default function Home() {
           До трёх карточек с объяснением, почему именно они. Каталог: 66 профилей, окно дат 23.09–31.12.2026.
         </p>
       </header>
+
+      <section className="mb-6 rounded-lg border border-slate-300 bg-white p-4">
+        <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+          Опишите мероприятие своими словами
+        </div>
+        <div className="flex gap-2">
+          <input
+            className="input flex-1"
+            value={chatText}
+            placeholder="нужен ведущий на свадьбу в Алматы 18 ноября, бюджет до миллиона, чтобы вёл на казахском"
+            onChange={(e) => setChatText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && void parseChat()}
+          />
+          <button
+            onClick={() => void parseChat()}
+            disabled={parsing}
+            className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {parsing ? 'Читаю…' : 'Разобрать'}
+          </button>
+        </div>
+
+        {parsed && (
+          <div className="mt-3 rounded border border-slate-200 bg-slate-50 p-3 text-sm">
+            <div className="font-medium">Правильно понял?</div>
+            <div className="mt-1 whitespace-pre-line">{parsed.summary}</div>
+
+            {parsed.unsupported.length > 0 && (
+              <ul className="mt-2 space-y-0.5 text-xs text-amber-800">
+                {parsed.unsupported.map((u) => (
+                  <li key={u.quote}>«{u.quote}» — {u.reason}</li>
+                ))}
+              </ul>
+            )}
+
+            {parsed.question && <div className="mt-2 text-xs text-slate-600">{parsed.question}</div>}
+
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                onClick={applyParsed}
+                disabled={parsed.missing.length > 0}
+                className="rounded bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+              >
+                Всё верно, искать
+              </button>
+              <span className="text-xs text-slate-500">
+                {parsed.missing.length > 0
+                  ? `не хватает: ${parsed.missing.join(', ')} — допишите в запросе или заполните форму ниже`
+                  : 'можно поправить любое поле в форме ниже'}
+              </span>
+            </div>
+          </div>
+        )}
+      </section>
 
       <section className="mb-6">
         <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Сценарии для проверки</div>
