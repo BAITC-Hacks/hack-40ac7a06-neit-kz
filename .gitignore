@@ -5,3 +5,10 @@ node_modules/
 .next/
 .vercel/
 .cache/
+
+# next.js
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
