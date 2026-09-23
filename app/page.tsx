@@ -555,7 +555,11 @@ function CardView({ card, index, anon, soft }: { card: Card; index: number; anon
         {card.facts.experienceClaims.map((e) => <Chip key={e}>{e}</Chip>)}
         {card.facts.alsoListedAs.length > 0 && <Chip>также: {card.facts.alsoListedAs.join(', ')}</Chip>}
         {card.facts.priceImputed && <Chip warn>цена ориентировочная</Chip>}
-        {card.facts.synthetic && <Chip warn>синтетический профиль</Chip>}
+        {card.facts.addedByTeam ? (
+          <Chip warn>профиль дописан нашей командой</Chip>
+        ) : (
+          card.facts.synthetic && <Chip warn>синтетический профиль из поставки</Chip>
+        )}
         {card.facts.wishChecks.map((w) => (
           <Chip key={w.wish} warn={!w.confirmed}>
             {w.wish}: {w.confirmed ? 'подтверждено' : 'не упомянуто в профиле'}

@@ -7,79 +7,70 @@
   "date": "2026-09-25",
   "budgetKzt": 2500000
  },
- "outcome": "NO_CATEGORY_IN_CITY",
- "message": "В каталоге нет категории «Лайв-бэнд» в городе Астана. Всего таких подрядчиков 5, и все они в Алматы.",
- "cards": [],
+ "outcome": "MATCHED",
+ "message": "Подобрали 2 из 4, кто берёт «корпоратив» в городе Астана. Меньше трёх, потому что 2 заняты 2026-09-25. Если дата гибкая: 2026-09-29 подходящих 3.",
+ "cards": [
+  {
+   "id": "HK-90014",
+   "name": "Монки Д. Луффи",
+   "priceFromKzt": 1200000,
+   "score": 0.3662,
+   "explanation": "Монки Д. Луффи выступает на казахском и русском языках с ценой 1 200 000 ₸, профиль синтетический.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 1 200 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "languages",
+     "value": "языки: казахский, русский",
+     "tier": 1
+    }
+   ],
+   "wishChecks": [],
+   "synthetic": true,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-90121",
+   "name": "Макото Кино",
+   "priceFromKzt": 1550000,
+   "score": 0.3338,
+   "explanation": "Макото Кино по цене 1 550 000 ₸ поёт только на русском языке, профиль синтетический.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 1 550 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "languages",
+     "value": "языки: русский",
+     "tier": 1
+    }
+   ],
+   "wishChecks": [],
+   "synthetic": true,
+   "priceImputed": false
+  }
+ ],
  "softCards": [
   {
    "id": "HK-23752",
    "name": "Дзэнъицу Агацума",
    "priceFromKzt": 1150000,
    "score": 0.3708,
-   "explanation": "Дзэнъицу Агацума говорит на казахском и русском языках и берёт 4 формата из 6 возможных. Гонорар 1 150 000 ₸, перелёт и проживание оплачиваются отдельно.",
-   "differentiators": [
-    {
-     "axis": "languages",
-     "value": "языки: казахский, русский",
-     "tier": 1
-    },
-    {
-     "axis": "formats",
-     "value": "берёт 4 форматов из 6",
-     "tier": 1
-    }
-   ],
-   "relaxation": "FLY_IN",
-   "relaxationDetail": "В городе Астана на 2026-09-25 подходящих нет, а он свободен. Гонорар 1 150 000 ₸ — проезд считается отдельной строкой сметы и в цену не входит.",
-   "travelTotalKzt": 256500,
-   "travelBasis": "exact",
-   "wishChecks": [],
-   "synthetic": false,
-   "priceImputed": false
-  },
-  {
-   "id": "HK-31819",
-   "name": "Каору Камия",
-   "priceFromKzt": 1150000,
-   "score": 0.4169,
-   "explanation": "Каору Камия владеет английским и русским языками и берёт 3 формата из 6. Гонорар 1 150 000 ₸, перелёт и проживание оплачиваются отдельно.",
-   "differentiators": [
-    {
-     "axis": "languages",
-     "value": "языки: английский, русский",
-     "tier": 1
-    },
-    {
-     "axis": "formats",
-     "value": "берёт 3 форматов из 6",
-     "tier": 1
-    }
-   ],
-   "relaxation": "FLY_IN",
-   "relaxationDetail": "В городе Астана на 2026-09-25 подходящих нет, а он свободен. Гонорар 1 150 000 ₸ — проезд считается отдельной строкой сметы и в цену не входит.",
-   "travelTotalKzt": 256500,
-   "travelBasis": "exact",
-   "wishChecks": [],
-   "synthetic": false,
-   "priceImputed": false
-  }
- ],
- "nearestCards": [
-  {
-   "id": "HK-25279",
-   "name": "Мегумин",
-   "priceFromKzt": 800000,
-   "score": 0.4492,
-   "explanation": "Мегумин работает в городе Алматы и в профиле указано только русскоязычное исполнение. Мы — Crimson Demon Live!",
+   "explanation": "Дзэнъицу Агацума из Алматы предлагает репертуар с казахскими песнями и хитами 80-х–2000-х, гонорар 1 150 000 ₸ без учёта проезда.",
    "differentiators": [
     {
      "axis": "description",
-     "value": "Мы — Crimson Demon Live!",
+     "value": "В репертуаре группы большой выбор казахских песен, ретро-шлягеров, хитов 80-х, 90-х, 2000-х, а так же, современные хиты.",
      "tier": 2
     }
    ],
-   "relaxation": "NEAREST",
-   "relaxationDetail": "Под ваши условия не подходит: работает в городе Алматы, не в Астане.",
+   "relaxation": "FLY_IN",
+   "relaxationDetail": "В городе Астана на 2026-09-25 подходящих нет, а он свободен. Гонорар 1 150 000 ₸ — проезд считается отдельной строкой сметы и в цену не входит.",
    "travelTotalKzt": 256500,
    "travelBasis": "exact",
    "wishChecks": [],
@@ -87,22 +78,73 @@
    "priceImputed": false
   }
  ],
+ "nearestCards": [],
  "funnel": [
   {
    "step": "город",
-   "before": 66,
-   "after": 15,
-   "dropped": 51,
+   "before": 241,
+   "after": 78,
+   "dropped": 163,
    "reason": "город «Астана»"
   },
   {
    "step": "категория",
-   "before": 15,
-   "after": 0,
-   "dropped": 15,
+   "before": 78,
+   "after": 5,
+   "dropped": 73,
    "reason": "категория «Лайв-бэнд»"
+  },
+  {
+   "step": "формат",
+   "before": 5,
+   "after": 4,
+   "dropped": 1,
+   "reason": "берёт «корпоратив»"
+  },
+  {
+   "step": "свободен",
+   "before": 4,
+   "after": 2,
+   "dropped": 2,
+   "reason": "свободен 2026-09-25"
+  },
+  {
+   "step": "бюджет",
+   "before": 2,
+   "after": 2,
+   "dropped": 0,
+   "reason": "цена до 2 500 000 ₸"
+  },
+  {
+   "step": "язык",
+   "before": 2,
+   "after": 2,
+   "dropped": 0,
+   "reason": "язык не указан"
+  },
+  {
+   "step": "длительность",
+   "before": 2,
+   "after": 2,
+   "dropped": 0,
+   "reason": "длительность не указана"
   }
  ],
- "nearMisses": [],
- "notes": []
+ "nearMisses": [
+  {
+   "id": "HK-90015",
+   "name": "Ророноа Зоро",
+   "droppedAt": "свободен",
+   "reason": "занят 2026-09-25"
+  },
+  {
+   "id": "HK-90122",
+   "name": "Минако Айно",
+   "droppedAt": "свободен",
+   "reason": "занят 2026-09-25"
+  }
+ ],
+ "notes": [
+  "В выдаче есть профили, помеченные в датасете как синтетические — они отмечены в карточке."
+ ]
 }

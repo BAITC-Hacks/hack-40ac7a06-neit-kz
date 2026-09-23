@@ -8,15 +8,42 @@
   "budgetKzt": 400000
  },
  "outcome": "MATCHED",
- "message": "Подобрали 1 из 2, кто берёт «свадьба» в городе Алматы. Меньше трёх, потому что 1 занят 2026-10-17; в каталоге всего 2 подрядчика этой категории в городе.",
+ "message": "Подобрали 2 из 3, кто берёт «свадьба» в городе Алматы. Меньше трёх, потому что 1 занят 2026-10-17. Если дата гибкая: 2026-10-15 подходящих 3.",
  "cards": [
+  {
+   "id": "HK-90082",
+   "name": "Лин Яо",
+   "priceFromKzt": 230000,
+   "score": 0.3904,
+   "explanation": "Лин Яо предлагает услуги цветочной мастерской в Алматы по цене 230 000 ₸, профиль синтетический.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 230 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "description",
+     "value": "Цветочная мастерская, Алматы.",
+     "tier": 2
+    }
+   ],
+   "wishChecks": [],
+   "synthetic": true,
+   "priceImputed": false
+  },
   {
    "id": "HK-90001",
    "name": "Тихиро Огино",
    "priceFromKzt": 250000,
    "score": 0.3788,
-   "explanation": "Тихиро Огино предлагает авторскую флористику White Sakura Studio для свадеб и юбилеев, говорит на казахском и русском языках. Цена 250000 KZT, профиль синтетический.",
+   "explanation": "Тихиро Огино из White Sakura Studio специализируется на авторской флористике для свадеб, цена 250 000 ₸, профиль синтетический.",
    "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 250 000 ₸",
+     "tier": 1
+    },
     {
      "axis": "description",
      "value": "White Sakura Studio — авторская флористика для свадеб и юбилеев.",
@@ -33,50 +60,50 @@
  "funnel": [
   {
    "step": "город",
-   "before": 66,
-   "after": 50,
-   "dropped": 16,
+   "before": 241,
+   "after": 111,
+   "dropped": 130,
    "reason": "город «Алматы»"
   },
   {
    "step": "категория",
-   "before": 50,
-   "after": 2,
-   "dropped": 48,
+   "before": 111,
+   "after": 4,
+   "dropped": 107,
    "reason": "категория «Флорист»"
   },
   {
    "step": "формат",
-   "before": 2,
-   "after": 2,
-   "dropped": 0,
+   "before": 4,
+   "after": 3,
+   "dropped": 1,
    "reason": "берёт «свадьба»"
   },
   {
    "step": "свободен",
-   "before": 2,
-   "after": 1,
+   "before": 3,
+   "after": 2,
    "dropped": 1,
    "reason": "свободен 2026-10-17"
   },
   {
    "step": "бюджет",
-   "before": 1,
-   "after": 1,
+   "before": 2,
+   "after": 2,
    "dropped": 0,
    "reason": "цена до 400 000 ₸"
   },
   {
    "step": "язык",
-   "before": 1,
-   "after": 1,
+   "before": 2,
+   "after": 2,
    "dropped": 0,
    "reason": "язык не указан"
   },
   {
    "step": "длительность",
-   "before": 1,
-   "after": 1,
+   "before": 2,
+   "after": 2,
    "dropped": 0,
    "reason": "длительность не указана"
   }

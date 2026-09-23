@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { CONTRACTORS } from '../lib/catalog';
+import { CONTRACTORS, META } from '../lib/catalog';
 import { applyFilters } from '../lib/filters';
 import { match } from '../lib/match';
 import { assignDifferentiators } from '../lib/differentiators';
@@ -46,18 +46,21 @@ test('занятый на дату не попадает в основную в�
   }
 });
 
-test('пустой max_hours проходит фильтр длительности (флорист, декоратор, сувениры)', () => {
+test('пустой max_hours проходит фильтр длительности, сколько бы профилей ни было', () => {
   const noLimit = CONTRACTORS.filter((c) => c.maxHours === null);
-  assert.equal(noLimit.length, 9, 'в датасете должно быть 9 профилей без лимита часов');
+  assert.ok(noLimit.length > 0, 'в каталоге должны быть профили без лимита часов');
 
-  const r = applyFilters({
-    city: 'Алматы',
-    category: 'Флорист',
-    eventFormat: 'свадьба',
-    date: '2026-10-12',
-    durationHours: 12,
-  });
-  assert.ok(r.survivors.length > 0, 'фильтр длительности не должен обнулять категории без лимита часов');
+  // Свойство, а не число: ни один профиль без лимита часов не должен отсеиваться длительностью.
+  for (const c of noLimit.slice(0, 20)) {
+    const r = applyFilters({
+      city: c.city,
+      category: c.categories[0],
+      date: '2026-10-12',
+      durationHours: 24,
+    });
+    const dropped = r.funnel.find((f) => f.step === 'длительность')?.dropped ?? 0;
+    assert.equal(dropped, 0, `${c.name}: фильтр длительности отсеял профиль без лимита часов`);
+  }
 });
 
 test('даты сравниваются строками: граница месяца не уезжает', () => {
@@ -69,18 +72,27 @@ test('даты сравниваются строками: граница мес�
 });
 
 test('язык жёсткий только там, где продукт — речь и вокал', () => {
-  // У декораторов нет ни одного профиля с казахским: жёсткий фильтр обнулил бы категорию.
-  const decorators = CONTRACTORS.filter((c) => c.categories.includes('Декоратор'));
-  assert.equal(decorators.filter((c) => c.languages.includes('казахский')).length, 0);
+  // Ищем в каталоге языко-мягкую категорию, где нужного языка нет ни у кого:
+  // жёсткий фильтр обнулил бы её на ровном месте.
+  const soft = META.categories.filter((c) => !META.langCriticalCategories.includes(c));
+  const victim = soft
+    .map((category) => {
+      const pool = CONTRACTORS.filter((c) => c.categories.includes(category));
+      const lang = META.languages.find((l) => pool.length > 0 && !pool.some((c) => c.languages.includes(l)));
+      return lang ? { category, lang, city: pool[0].city } : null;
+    })
+    .find(Boolean);
+
+  if (!victim) return; // в каталоге нет такой пары — проверять нечего
 
   const r = applyFilters({
-    city: 'Алматы',
-    category: 'Декоратор',
-    eventFormat: 'свадьба',
+    city: victim.city,
+    category: victim.category,
     date: '2026-10-12',
-    language: 'казахский',
+    language: victim.lang,
   });
-  assert.ok(r.survivors.length > 0, 'язык не должен обнулять категорию, где он не является продуктом');
+  const dropped = r.funnel.find((f) => f.step === 'язык')?.dropped ?? 0;
+  assert.equal(dropped, 0, `язык обнулил категорию «${victim.category}», где он не является продуктом`);
 });
 
 test('различители: структурные близнецы различаются по тексту профиля', () => {

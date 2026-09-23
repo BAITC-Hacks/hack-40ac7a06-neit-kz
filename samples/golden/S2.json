@@ -7,69 +7,19 @@
   "date": "2026-12-12",
   "budgetKzt": 1500000
  },
- "outcome": "NO_ONE_PASSES",
- "message": "В городе Алматы формат «корпоратив» в категории «Ведущий» берут 9. Из них 9 заняты 2026-12-12. Никто не проходит по всем условиям. Если дата гибкая: 2026-12-09 подходящих 4.",
- "cards": [],
- "softCards": [],
- "nearestCards": [
+ "outcome": "MATCHED",
+ "message": "Подобрали 2 из 17, кто берёт «корпоратив» в городе Алматы. Меньше трёх, потому что 14 заняты 2026-12-12; у 1 подрядчика цена выше бюджета. Если дата гибкая: 2026-12-13 подходящих 4.",
+ "cards": [
   {
-   "id": "HK-27222",
-   "name": "Сон Гоку",
-   "priceFromKzt": 1000000,
-   "score": 0.3744,
-   "explanation": "Сон Гоку ведёт на казахском и русском языках и имеет более 12 лет опыта. Занят 2026-12-12, свободен 2026-12-11 — на 1 день раньше.",
-   "differentiators": [
-    {
-     "axis": "languages",
-     "value": "языки: казахский, русский",
-     "tier": 1
-    },
-    {
-     "axis": "experience",
-     "value": "более 12 лет опыта",
-     "tier": 1
-    }
-   ],
-   "relaxation": "NEAREST",
-   "relaxationDetail": "Под ваши условия не подходит: занят 2026-12-12, свободен 2026-12-11 — на 1 дн. раньше.",
-   "wishChecks": [],
-   "synthetic": false,
-   "priceImputed": false
-  },
-  {
-   "id": "HK-44733",
-   "name": "Буллма",
-   "priceFromKzt": 1000000,
-   "score": 0.3744,
-   "explanation": "Буллма говорит на английском и русском, с опытом более 10 лет. Занят 2026-12-12, свободен 2026-12-13 — на 1 день позже.",
-   "differentiators": [
-    {
-     "axis": "languages",
-     "value": "языки: английский, русский",
-     "tier": 1
-    },
-    {
-     "axis": "experience",
-     "value": "более 10 лет опыта",
-     "tier": 1
-    }
-   ],
-   "relaxation": "NEAREST",
-   "relaxationDetail": "Под ваши условия не подходит: занят 2026-12-12, свободен 2026-12-13 — на 1 дн. позже.",
-   "wishChecks": [],
-   "synthetic": false,
-   "priceImputed": false
-  },
-  {
-   "id": "HK-35215",
-   "name": "Кики",
-   "priceFromKzt": 900000,
-   "score": 0.3897,
-   "explanation": "Отличие: языки: английский, казахский, русский. Цена 900 000 ₸ — остаётся 600 000 ₸ от бюджета.",
+   "id": "HK-90046",
+   "name": "Дейдара",
+   "priceFromKzt": 850000,
+   "score": 0.3462,
+   "explanation": "Дейдара ведёт мероприятия на английском, казахском и русском языках по цене 850 000 ₸, что ниже бюджета на 650 000 ₸; профиль синтетический.",
    "differentiators": [
     {
      "axis": "price",
-     "value": "цена 900 000 ₸",
+     "value": "цена 850 000 ₸",
      "tier": 1
     },
     {
@@ -78,60 +28,82 @@
      "tier": 1
     }
    ],
-   "relaxation": "NEAREST",
-   "relaxationDetail": "Под ваши условия не подходит: занят 2026-12-12, свободен 2026-12-10 — на 2 дн. раньше.",
    "wishChecks": [],
-   "synthetic": false,
+   "synthetic": true,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-90042",
+   "name": "Чоджи Акимичи",
+   "priceFromKzt": 1500000,
+   "score": 0.2462,
+   "explanation": "Чоджи Акимичи работает на казахском и русском языках с ценой 1 500 000 ₸, полностью укладываясь в бюджет; профиль синтетический.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 1 500 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "languages",
+     "value": "языки: казахский, русский",
+     "tier": 1
+    }
+   ],
+   "wishChecks": [],
+   "synthetic": true,
    "priceImputed": false
   }
  ],
+ "softCards": [],
+ "nearestCards": [],
  "funnel": [
   {
    "step": "город",
-   "before": 66,
-   "after": 50,
-   "dropped": 16,
+   "before": 241,
+   "after": 111,
+   "dropped": 130,
    "reason": "город «Алматы»"
   },
   {
    "step": "категория",
-   "before": 50,
-   "after": 10,
-   "dropped": 40,
+   "before": 111,
+   "after": 21,
+   "dropped": 90,
    "reason": "категория «Ведущий»"
   },
   {
    "step": "формат",
-   "before": 10,
-   "after": 9,
-   "dropped": 1,
+   "before": 21,
+   "after": 17,
+   "dropped": 4,
    "reason": "берёт «корпоратив»"
   },
   {
    "step": "свободен",
-   "before": 9,
-   "after": 0,
-   "dropped": 9,
+   "before": 17,
+   "after": 3,
+   "dropped": 14,
    "reason": "свободен 2026-12-12"
   },
   {
    "step": "бюджет",
-   "before": 0,
-   "after": 0,
-   "dropped": 0,
+   "before": 3,
+   "after": 2,
+   "dropped": 1,
    "reason": "цена до 1 500 000 ₸"
   },
   {
    "step": "язык",
-   "before": 0,
-   "after": 0,
+   "before": 2,
+   "after": 2,
    "dropped": 0,
    "reason": "язык не указан"
   },
   {
    "step": "длительность",
-   "before": 0,
-   "after": 0,
+   "before": 2,
+   "after": 2,
    "dropped": 0,
    "reason": "длительность не указана"
   }
@@ -156,5 +128,7 @@
    "reason": "занят 2026-12-12"
   }
  ],
- "notes": []
+ "notes": [
+  "В выдаче есть профили, помеченные в датасете как синтетические — они отмечены в карточке."
+ ]
 }

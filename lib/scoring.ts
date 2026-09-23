@@ -191,6 +191,7 @@ export function buildFacts(
     alsoListedAs: alsoListedAs(c, req.category),
     priceImputed: c.priceImputed,
     synthetic: c.synthetic,
+    addedByTeam: c.addedByTeam,
   };
 }
 

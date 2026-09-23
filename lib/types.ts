@@ -10,6 +10,8 @@ export type Contractor = {
   city: string;
   cityImputed: boolean;
   synthetic: boolean;
+  /** профиль дописан нашей командой, в поставке организаторов его не было */
+  addedByTeam?: boolean;
   priceFromKzt: number;
   priceImputed: boolean;
   eventFormats: string[];
@@ -89,6 +91,7 @@ export type Facts = {
   alsoListedAs: string[];
   priceImputed: boolean;
   synthetic: boolean;
+  addedByTeam?: boolean;
 };
 
 /** Ось, по которой карточка уникальна внутри выдачи */
