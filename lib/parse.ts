@@ -131,23 +131,31 @@ function systemPrompt(): string {
     'Ты разбираешь запрос клиента event-площадки на структурированные поля.',
     `Сегодня 23.09.2026. Каталог работает с датами ${META.dateWindow.from} — ${META.dateWindow.to}.`,
     '',
+    'Значения ОБЯЗАНЫ быть выбраны ровно из этих списков, слово в слово:',
+    `city: ${META.cities.join(' | ')}`,
+    `category: ${META.categories.join(' | ')}`,
+    `eventFormat: ${META.eventFormats.join(' | ')}`,
+    `language: ${META.languages.join(' | ')}`,
+    '',
+    'Сопоставляй сам, невзирая на падежи, регистр, опечатки и синонимы:',
+    '«в АСтану» → Астана, «тамаду» → Ведущий, «на свадьбу» → свадьба, «кавер-группу» → Лайв-бэнд.',
+    'Если подходящего значения в списке НЕТ — поле не пиши, а положи цитату в unclear.',
+    'Город, которого нет в списке (Шымкент, Караганда), подменять ближайшим ЗАПРЕЩЕНО.',
+    '',
     'Верни JSON:',
     '{"city":"","date":"YYYY-MM-DD","category":"","eventFormat":"","budgetKzt":0,',
     ' "durationHours":0,"language":"","wishes":["короткие формулировки пожеланий"],',
     ' "unclear":[{"quote":"цитата из запроса","note":"что непонятно"}]}',
     '',
     'ПРАВИЛА:',
-    '1. Заполняй только то, что человек сказал явно. Ничего не додумывай и не подставляй «типичные» значения.',
+    '1. Заполняй только то, что человек сказал явно. Ничего не додумывай.',
     '2. Если чего-то нет — НЕ пиши поле вообще. Пустая строка и ноль тоже запрещены.',
     '3. «Недорого», «подешевле» — это НЕ бюджет. Бюджет только если названа сумма.',
-    '4. Город, категорию и формат пиши так, как сказал человек — сопоставлением займётся код.',
-    '5. Пожелания — это то, что нельзя выразить полями: стиль, темы, особые требования.',
-    `6. Языки только из списка: ${META.languages.join(', ')}.`,
-    '7. Всё, в чём не уверен, клади в unclear с точной цитатой.',
+    '4. Пожелания — то, что нельзя выразить полями: стиль, темы, особые требования.',
+    '5. Всё, в чём не уверен, клади в unclear с точной цитатой.',
   ].join('\n');
 }
 
-/** Сопоставление с каталогом без обращения к модели — вынесено ради тестов. */
 export const matchCity = (raw: string) => lookup(CITY_SYNONYMS, raw);
 export const matchCategory = (raw: string) => lookup(CATEGORY_SYNONYMS, raw);
 export const matchFormat = (raw: string) => lookup(FORMAT_SYNONYMS, raw);
@@ -217,7 +225,9 @@ export async function parseRequest(text: string): Promise<ParsedRequest> {
   const unsupported: ParsedRequest['unsupported'] = [];
 
   // Город: только из словаря каталога. Чужой город — не подмена ближайшим, а честный отказ.
-  let city = lookup(CITY_SYNONYMS, raw.city);
+  // Модель обязана вернуть значение из перечня каталога. Словари остаются
+  // подстраховкой: они же работают, когда ключа нет вовсе.
+  let city = raw.city && META.cities.includes(raw.city) ? raw.city : lookup(CITY_SYNONYMS, raw.city);
   if (raw.city && !city) {
     unsupported.push({
       quote: raw.city,
@@ -227,8 +237,14 @@ export async function parseRequest(text: string): Promise<ParsedRequest> {
 
   // Категория и формат: модель их регулярно меняет местами («ведущий на свадьбу»),
   // поэтому каждое значение проверяем по обоим словарям и раскладываем по местам сами.
-  let category = lookup(CATEGORY_SYNONYMS, raw.category);
-  let eventFormat = lookup(FORMAT_SYNONYMS, raw.eventFormat);
+  let category =
+    raw.category && META.categories.includes(raw.category)
+      ? raw.category
+      : lookup(CATEGORY_SYNONYMS, raw.category);
+  let eventFormat =
+    raw.eventFormat && META.eventFormats.includes(raw.eventFormat)
+      ? raw.eventFormat
+      : lookup(FORMAT_SYNONYMS, raw.eventFormat);
   if (!category && raw.eventFormat) category = lookup(CATEGORY_SYNONYMS, raw.eventFormat);
   if (!eventFormat && raw.category) eventFormat = lookup(FORMAT_SYNONYMS, raw.category);
 
