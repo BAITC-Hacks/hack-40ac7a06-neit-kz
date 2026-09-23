@@ -289,7 +289,7 @@ export function estimateTravelCost(
 | `app/page.tsx` | `CardView`, блок `relaxation` | плашка перелёта под `label`/`detail` |
 | `app/page.tsx` | чип «остаток бюджета» | подпись становится «остаток без перелёта», когда у карточки есть `travel` |
 | `scripts/verify.ts` | `snapshotCard` | добавляются `travel?.totalKzt` и `relaxation?.detail` — иначе текст плашки не закреплён ничем и его поломка пройдёт как PASS |
-| `package.json` | scripts | `test`, `refresh:flights` |
+| `package.json` | scripts | `refresh:flights` (`test` уже есть) |
 | `.env.example` | — | `TRAVELPAYOUTS_TOKEN` |
 | `data/scenarios.json` | — | S11 и S12 (§11) |
 | `docs/spec.md` | §9, строка «Перелёт» | переписывается: множителя ×1.2 нет, декоратор исключён, перелёт считается числом |
@@ -336,10 +336,10 @@ export function estimateTravelCost(
 
 ## 10. Проверка
 
-**Юнит-тесты** — `lib/travel.test.ts`, скрипт `"test": "tsx --test lib/travel.test.ts"`.
-Тестового слоя в проекте нет, так что это новая инфраструктура — но один файл и одна строка.
-Проверено прогоном: Node 24, tsx 4.23, `resolveJsonModule` и алиас `@/*` уже настроены,
-`tsx --test` с импортом `@/data/*.json` работает.
+**Юнит-тесты** — новый файл `tests/travel.test.ts`. Тестовый слой в проекте **уже есть**
+(коммит `9673158`: `tests/core.test.ts`, 11 тестов детерминизма и инвариантов, скрипт
+`"test": "tsx --test tests/*.test.ts"`), поэтому новой инфраструктуры не требуется —
+глоб подхватит файл сам. Node 24, tsx 4.23, `resolveJsonModule` и алиас `@/*` настроены.
 
 1. Дата есть в снимке → `basis: 'exact'`, сумма = (туда + обратно) × состав.
 2. **`perPersonKzt` складывается из двух разных плеч**, а не удваивает одно — та самая ошибка,
@@ -441,7 +441,7 @@ NEAREST из коммита `65bfa5c`. Новые получают номера 
 | # | Шаг | ~ |
 |---|---|---|
 | 1 | `data/flights.json` вручную с aviasales.kz, `source: "manual"` | 20 мин |
-| 2 | `lib/travel.ts` + `lib/travel.test.ts` | 30 мин |
+| 2 | `lib/travel.ts` + `tests/travel.test.ts` | 30 мин |
 | 3 | Врезка по таблице §8: типы, `flyIn`, оба места в `match.ts`, плашка и чип в `app/page.tsx` | 30 мин |
 | 4 | S11, S12, `snapshotCard`, `npm run verify -- --update` (**без ключа OpenAI**) | 20 мин |
 | 5 | README: сперва починить «9 сценариев» и ожидаемый вывод, потом семь пунктов §11 | 30 мин |
