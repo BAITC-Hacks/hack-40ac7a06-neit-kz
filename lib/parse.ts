@@ -217,7 +217,7 @@ export async function parseRequest(text: string): Promise<ParsedRequest> {
   const unsupported: ParsedRequest['unsupported'] = [];
 
   // Город: только из словаря каталога. Чужой город — не подмена ближайшим, а честный отказ.
-  const city = lookup(CITY_SYNONYMS, raw.city);
+  let city = lookup(CITY_SYNONYMS, raw.city);
   if (raw.city && !city) {
     unsupported.push({
       quote: raw.city,
@@ -282,6 +282,12 @@ export async function parseRequest(text: string): Promise<ParsedRequest> {
       wishes = wishes.filter((w) => w !== promoted);
     }
   }
+
+  // Последняя подстраховка: модель могла просто не вернуть поле. Ищем по исходному
+  // тексту сами — словари те же, так что выдумать ничего нельзя.
+  if (!category) category = lookup(CATEGORY_SYNONYMS, text);
+  if (!city) city = lookup(CITY_SYNONYMS, text);
+  if (!eventFormat) eventFormat = lookup(FORMAT_SYNONYMS, text);
   // Модель часто помечает «неясным» то, что мы уже разложили по полям
   // («ведущий» при category = Ведущий). Такие замечания только шумят.
   const resolved = new Set(
