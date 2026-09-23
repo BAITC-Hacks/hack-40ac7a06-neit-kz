@@ -1,0 +1,399 @@
+# Важно! Это просто референс. Не инструкция к дизайну. Главное, чтобы мы соответсвали техническому заданию от Хакатона. Просто хочется иметь более приятный отзывчивый интерфейс.
+
+
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Подбор подрядчиков</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#FFFFFF; --soft:#F5F6F8; --line:#E4E6EB;
+  --ink:#15171C; --muted:#5B616E; --faint:#8A909C;
+  --accent:#2450D6; --accent-hover:#1B3FAF; --accent-soft:#EBF0FD;
+  --good:#1C7A4A; --good-soft:#E8F5EE;
+  --warn:#7A4A00; --warn-soft:#FFF6E5;
+  --bad:#A12A1A;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+[hidden]{display:none!important}
+
+/* ---------- шапка ---------- */
+.top{height:64px;padding:0 24px;display:flex;align-items:center;gap:24px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.brand{font-weight:700;font-size:17px;flex:1}
+.tabs{display:flex;gap:28px;height:100%}
+.tab{border:0;background:none;padding:0;height:100%;font-size:15px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.top-spacer{flex:1}
+
+/* ---------- общие элементы ---------- */
+.btn{height:48px;padding:0 22px;border-radius:10px;border:0;font-weight:600;font-size:15px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-line{background:#fff;border:1px solid var(--line)}
+.btn-line:hover{border-color:#C9CDD5}
+.link{border:0;background:none;padding:0;color:var(--accent);font-weight:500}
+.link:hover{text-decoration:underline}
+
+/* ---------- клиентская ---------- */
+.client{max-width:760px;margin:0 auto;padding:88px 24px 96px}
+.client h1{margin:0;font-size:40px;line-height:1.15;font-weight:700;letter-spacing:-.02em}
+.lead{margin:12px 0 32px;color:var(--muted);font-size:18px}
+.ask{display:flex;gap:10px}
+.ask input{flex:1;min-width:0;height:56px;padding:0 18px;border:1px solid #CFD3DA;border-radius:12px;font-size:17px;background:#fff}
+.ask input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.ask .btn{height:56px;padding:0 28px}
+.examples{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.examples span{font-size:14px;color:var(--faint);margin-right:4px}
+.ex{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:14px;color:var(--muted)}
+.ex:hover{border-color:#C9CDD5;color:var(--ink)}
+
+.answer{margin-top:56px}
+.understood{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:baseline;padding-bottom:20px;border-bottom:1px solid var(--line);color:var(--muted);font-size:15px}
+.understood b{color:var(--ink);font-weight:500}
+.understood .link{margin-left:auto;font-size:14px}
+.answer h2{margin:32px 0 16px;font-size:22px;font-weight:600}
+.thinking{margin-top:56px;color:var(--muted);display:flex;align-items:center;gap:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:p 1s infinite ease-in-out}
+@keyframes p{50%{opacity:.25}}
+
+/* карточка подрядчика — общая для обеих вкладок */
+.list{display:flex;flex-direction:column;gap:12px}
+.card{border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:grid;grid-template-columns:1fr auto;gap:6px 24px;align-items:start;background:#fff}
+.card-name{font-size:18px;font-weight:600}
+.card-meta{font-size:14px;color:var(--muted)}
+.card-price{font-size:18px;font-weight:600;text-align:right;white-space:nowrap}
+.card-why{grid-column:1/-1;margin:8px 0 0;color:#2E323B}
+.card-note{grid-column:1/-1;margin:4px 0 0;font-size:14px;color:var(--warn)}
+.card-foot{grid-column:1/-1;display:flex;gap:10px;margin-top:12px}
+.card-foot .btn{height:42px;font-size:14px;padding:0 18px}
+
+.empty{border-radius:14px;background:var(--soft);padding:24px 24px}
+.empty h3{margin:0 0 6px;font-size:18px}
+.empty p{margin:0 0 16px;color:var(--muted)}
+
+.aside-note{margin-top:20px;font-size:14px;color:var(--muted)}
+
+/* ---------- функциональная ---------- */
+.func{max-width:1200px;margin:0 auto;padding:48px 24px 96px;display:grid;grid-template-columns:280px minmax(0,1fr);gap:56px}
+.func-intro{grid-column:1/-1}
+.func-intro h1{margin:0;font-size:32px;font-weight:700;letter-spacing:-.02em}
+.func-intro p{margin:8px 0 0;color:var(--muted);max-width:640px}
+.scn-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;position:sticky;top:88px;align-self:start}
+.scn{width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:8px;display:flex;gap:12px;font-size:15px;color:var(--muted);line-height:1.35}
+.scn:hover{background:var(--soft);color:var(--ink)}
+.scn[aria-current="true"]{background:var(--accent-soft);color:var(--ink);font-weight:500}
+.scn .num{width:22px;flex-shrink:0;color:var(--faint);font-variant-numeric:tabular-nums}
+.scn[aria-current="true"] .num{color:var(--accent)}
+
+.case-kicker{font-size:14px;color:var(--faint)}
+.case h2{margin:4px 0 0;font-size:26px;font-weight:600;letter-spacing:-.01em}
+.case-check{margin:12px 0 0;padding:14px 16px;border-radius:10px;background:var(--soft);color:#2E323B}
+.case-check b{font-weight:600}
+
+.section-label{margin:36px 0 12px;font-size:14px;font-weight:600;color:var(--muted)}
+.bubble{padding:14px 18px;border-radius:14px 14px 14px 4px;background:var(--soft);font-size:17px;max-width:620px}
+.parse{margin-top:10px;font-size:14px;color:var(--muted)}
+.parse b{color:var(--ink);font-weight:500}
+
+.steps{list-style:none;margin:0;padding:0;border-left:2px solid var(--line);margin-left:6px}
+.steps li{position:relative;padding:0 0 14px 22px}
+.steps li::before{content:"";position:absolute;left:-7px;top:7px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #C9CDD5}
+.steps li.zero::before{border-color:var(--bad);background:var(--bad)}
+.steps li:last-child{padding-bottom:0}
+.steps b{font-variant-numeric:tabular-nums;margin-right:6px}
+.steps li.zero b{color:var(--bad)}
+
+.rej{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.rej li{display:grid;grid-template-columns:200px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px}
+.rej .who{font-weight:500}
+.rej .reason{color:var(--muted)}
+.rej-none{color:var(--muted);font-size:15px}
+
+.params{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);display:flex;gap:24px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.params label{display:flex;align-items:center;gap:8px;cursor:pointer}
+.params input{width:16px;height:16px;accent-color:var(--accent)}
+.raw{font-family:ui-monospace,Consolas,monospace;font-size:13px;color:var(--muted);white-space:pre-wrap}
+
+@media (max-width:900px){
+  .func{grid-template-columns:1fr;gap:32px}
+  .scn-list{position:static;flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:4px}
+  .scn{white-space:nowrap;border:1px solid var(--line)}
+  .scn .t{display:none}
+}
+@media (max-width:640px){
+  .top{padding:0 16px;gap:16px}.brand{display:none}.top-spacer{display:none}
+  .client{padding-top:48px}.client h1{font-size:30px}
+  .ask{flex-direction:column}
+  .card{grid-template-columns:1fr}.card-price{text-align:left}
+  .rej li{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){.dot{animation:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">[Название сервиса]</div>
+  <nav class="tabs" role="tablist" aria-label="Режим">
+    <button class="tab" role="tab" id="t1" aria-controls="p1" aria-selected="true">Подбор</button>
+    <button class="tab" role="tab" id="t2" aria-controls="p2" aria-selected="false">Как это работает</button>
+  </nav>
+  <div class="top-spacer"></div>
+</header>
+
+<!-- ================= ВКЛАДКА 1: КЛИЕНТ ================= -->
+<main id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="client">
+    <h1>Кого ищете для мероприятия?</h1>
+    <p class="lead">Напишите как другу: кто нужен, в каком городе, когда и сколько готовы потратить. Мы предложим до трёх подрядчиков и объясним выбор.</p>
+
+    <form class="ask" id="askForm">
+      <label class="sr" for="q">Описание мероприятия</label>
+      <input id="q" type="text" autocomplete="off" placeholder="Например: ведущий на свадьбу в Алматы 18 ноября, до миллиона, на казахском">
+      <button class="btn btn-primary" type="submit">Подобрать</button>
+    </form>
+    <div class="examples" id="examples"><span>Попробуйте:</span></div>
+
+    <div id="thinking" class="thinking" hidden><span class="dot"></span>Подбираем…</div>
+    <section id="answer" class="answer" hidden aria-live="polite"></section>
+  </div>
+</main>
+
+<!-- ================= ВКЛАДКА 2: СЦЕНАРИИ ================= -->
+<main id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <div class="func">
+    <div class="func-intro">
+      <h1>Как подбор ведёт себя в трудных случаях</h1>
+      <p>Выберите сценарий слева. Справа — запрос клиента, ответ, который он увидит, и почему система ответила именно так.</p>
+    </div>
+
+    <ul class="scn-list" id="scnList" aria-label="Сценарии"></ul>
+
+    <article class="case" id="case" aria-live="polite"></article>
+  </div>
+</main>
+
+<script>
+/* ============ Данные: примеры для макета ============ */
+const SC = [
+ { id:'S1', t:'Выбор есть',
+   check:'Когда подходящих много, показываем лучших трёх, а не всех подряд.',
+   q:'Ведущий на корпоратив в Алматы 1 октября, бюджет полтора миллиона',
+   parse:{'Кто':'ведущий','Город':'Алматы','Дата':'1 октября','Формат':'корпоратив','Бюджет':'до 1 500 000 ₸'},
+   res:{title:'Три ведущих подходят', cards:[
+     {n:'Асель Б.',m:'Ведущая, Алматы',p:'900 000 ₸',w:'Чаще всего ведёт корпоративы — так написано в анкете. Свободна 1 октября, цена с запасом в бюджете.'},
+     {n:'Тимур Ж.',m:'Ведущий, Алматы',p:'1 200 000 ₸',w:'Опыт с командами от 200 человек, программа с интерактивами. Свободен 1 октября.'},
+     {n:'Жанна М.',m:'Ведущая, Алматы',p:'650 000 ₸',w:'Самый доступный вариант среди подходящих. Ведёт на русском и казахском.'}]},
+   steps:[[66,'в каталоге'],[38,'в Алматы'],[9,'ведущих'],[7,'берут корпоративы'],[5,'свободны 1 октября'],[4,'укладываются в бюджет']],
+   rej:[['Руслан А.','Подходит, но уступил троим по совпадению с запросом']]},
+ { id:'S2', t:'Всё занято',
+   check:'Если на дату все заняты — не показываем занятых как свободных, а предлагаем соседние даты.',
+   q:'Ведущий на корпоратив в Алматы 31 декабря, бюджет полтора миллиона',
+   parse:{'Кто':'ведущий','Город':'Алматы','Дата':'31 декабря','Формат':'корпоратив','Бюджет':'до 1 500 000 ₸'},
+   res:{empty:{h:'31 декабря все подходящие ведущие заняты',p:'Семь ведущих подходят по остальным условиям. Ближайшие даты, когда они свободны, — 30 декабря и 3 января.',a:'Показать на 30 декабря'}},
+   steps:[[66,'в каталоге'],[38,'в Алматы'],[9,'ведущих'],[7,'берут корпоративы'],[0,'свободны 31 декабря']],
+   rej:[['Асель Б.','Занята 31 декабря'],['Тимур Ж.','Занят 31 декабря'],['Жанна М.','Занята 31 декабря']]},
+ { id:'S3', t:'Три похожих',
+   check:'Когда у троих одинаковые цены и даты, объясняем разницу по тексту анкет — а не пишем одно и то же.',
+   q:'Фотограф на юбилей в Астане 7 ноября, бюджет 600 тысяч',
+   parse:{'Кто':'фотограф','Город':'Астана','Дата':'7 ноября','Формат':'юбилей','Бюджет':'до 600 000 ₸'},
+   res:{title:'Три фотографа подходят', cards:[
+     {n:'Олжас Н.',m:'Фотограф, Астана',p:'550 000 ₸',w:'Снимает репортажно и умеет работать со старшими гостями — для юбилея это главное.'},
+     {n:'Кристина В.',m:'Фотограф, Астана',p:'550 000 ₸',w:'Сильна в постановочных семейных портретах — если нужен общий снимок всех поколений.'},
+     {n:'Нуржан Е.',m:'Фотограф, Астана',p:'550 000 ₸',w:'Специализируется на вечерней съёмке в банкетных залах со слабым светом.'}]},
+   steps:[[66,'в каталоге'],[29,'в Астане'],[4,'фотографа'],[3,'свободны 7 ноября'],[3,'укладываются в бюджет']],
+   rej:[]},
+ { id:'S4', t:'Мало вариантов',
+   check:'Если подходящих меньше трёх — показываем сколько есть и говорим почему, не добиваем чем попало.',
+   q:'Национальный ансамбль на той в Астане 21 ноября',
+   parse:{'Кто':'национальный ансамбль','Город':'Астана','Дата':'21 ноября','Формат':'той'},
+   res:{title:'Нашли двоих', note:'В Астане в этой категории всего два коллектива — оба свободны.', cards:[
+     {n:'Ансамбль «Сазген»',m:'Национальный ансамбль, Астана',p:'1 100 000 ₸',w:'Тои указаны основным форматом. Свободен 21 ноября.'},
+     {n:'Ансамбль «Керуен»',m:'Национальный ансамбль, Астана',p:'800 000 ₸',w:'Домбра и кобыз, программа на час. Свободен 21 ноября.'}]},
+   steps:[[66,'в каталоге'],[29,'в Астане'],[2,'национальных ансамбля'],[2,'свободны 21 ноября']],
+   rej:[]},
+ { id:'S5', t:'Свободен только накануне',
+   check:'Декоратор занят в день свадьбы, но свободен накануне — это вариант, если монтаж можно сделать заранее.',
+   q:'Декоратор на свадьбу в Алматы 15 ноября',
+   parse:{'Кто':'декоратор','Город':'Алматы','Дата':'15 ноября','Формат':'свадьба'},
+   res:{title:'Двое могут оформить зал', cards:[
+     {n:'Студия «Ақ Шаңырақ»',m:'Декоратор, Алматы',p:'1 300 000 ₸',w:'Свободна и 14, и 15 ноября, свадьбы — основной формат.'},
+     {n:'Гүлнар Т.',m:'Декоратор, Алматы',p:'900 000 ₸',w:'Дешевле и с похожим стилем.',note:'Занята 15 ноября. Подойдёт, если зал пустит на монтаж 14-го.'}]},
+   steps:[[66,'в каталоге'],[38,'в Алматы'],[5,'декораторов'],[4,'берут свадьбы'],[1,'свободны 15 ноября'],[2,'с учётом монтажа 14-го']],
+   rej:[['Студия «Флёр»','Занята 14 и 15 ноября'],['Айнур К.','Занята 14 и 15 ноября']]},
+ { id:'S6', t:'Нет в городе',
+   check:'Если в городе нет такой категории, предлагаем тех, кто в анкете указал готовность приехать.',
+   q:'Лайв-бэнд на свадьбу в Астане 12 декабря',
+   parse:{'Кто':'лайв-бэнд','Город':'Астана','Дата':'12 декабря','Формат':'свадьба'},
+   res:{title:'Приедут из Алматы', note:'В Астане лайв-бэндов в каталоге нет. Эти двое готовы приехать.', cards:[
+     {n:'Группа «Dala»',m:'Лайв-бэнд, Алматы',p:'1 600 000 ₸',w:'В анкете указаны выезды по Казахстану. Свободны 12 декабря.'},
+     {n:'Кавер-бэнд «Жол»',m:'Лайв-бэнд, Алматы',p:'1 900 000 ₸',w:'Свободны 12 декабря.',note:'Дорога и проживание оплачиваются отдельно.'}]},
+   steps:[[66,'в каталоге'],[29,'в Астане'],[0,'лайв-бэндов в Астане'],[2,'готовы приехать из других городов']],
+   rej:[]},
+ { id:'S7', t:'Занят и слишком дорог',
+   check:'Если у кандидата две причины отказа, называем обе — а не одну первую попавшуюся.',
+   q:'Шоу-программа на корпоратив в Астане 14 ноября, бюджет 200 тысяч',
+   parse:{'Кто':'шоу-программа','Город':'Астана','Дата':'14 ноября','Формат':'корпоратив','Бюджет':'до 200 000 ₸'},
+   res:{empty:{h:'Под этот запрос никто не подошёл',p:'В Астане три шоу-программы. 14 ноября свободна одна, и она стоит 1 200 000 ₸ — в шесть раз больше бюджета.',a:'Показать без учёта бюджета'}},
+   steps:[[66,'в каталоге'],[29,'в Астане'],[3,'шоу-программы'],[1,'свободна 14 ноября'],[0,'в бюджете']],
+   rej:[['Айбек Т.','Занят 14 ноября и стоит 1 800 000 ₸ — в девять раз дороже бюджета'],['Студия «Жулдыз»','Занята 14 ноября'],['Мадина Р.','Свободна, но стоит 1 200 000 ₸ — в шесть раз дороже бюджета']]},
+ { id:'S8', t:'Формат никто не берёт',
+   check:'Если категория есть, но под этот формат никто не работает, — так и говорим, без натяжек.',
+   q:'Танцевальный коллектив на конференцию в Алматы 5 октября',
+   parse:{'Кто':'танцевальный коллектив','Город':'Алматы','Дата':'5 октября','Формат':'конференция'},
+   res:{empty:{h:'На конференции никто не выступает',p:'Все три коллектива в Алматы работают только на праздниках: тоях, свадьбах, юбилеях. Можно написать им напрямую.',a:'Всё равно показать коллективы'}},
+   steps:[[66,'в каталоге'],[38,'в Алматы'],[3,'танцевальных коллектива'],[0,'берут конференции']],
+   rej:[['Коллектив «Алем»','Только тои и свадьбы'],['Шоу-балет «Nur»','Конференций нет в анкете'],['Студия «Қанат»','Только юбилеи и дни рождения']]},
+ { id:'S9', t:'Пожелание, которого нет в анкетах',
+   check:'Клиент просит розы, а в анкетах про розы ничего нет. Не выдумываем — честно помечаем, что нужно уточнить.',
+   q:'Флорист на свадьбу в Алматы 28 ноября, чтобы украсил розами',
+   parse:{'Кто':'флорист','Город':'Алматы','Дата':'28 ноября','Формат':'свадьба','Пожелание':'розы'},
+   res:{title:'Три флориста свободны', note:'Про розы ни в одной анкете не сказано — уточните у флориста.', cards:[
+     {n:'Мастерская «Гүл»',m:'Флорист, Алматы',p:'600 000 ₸',w:'Свадьбы — основной формат, свободна 28 ноября.'},
+     {n:'Алия Д.',m:'Флорист, Алматы',p:'750 000 ₸',w:'Оформляет и зал, и выездную церемонию. Свободна 28 ноября.'},
+     {n:'Studio Bloom',m:'Флорист, Алматы',p:'900 000 ₸',w:'Крупные инсталляции для больших залов. Свободна 28 ноября.'}]},
+   steps:[[66,'в каталоге'],[38,'в Алматы'],[4,'флориста'],[3,'свободны 28 ноября'],[3,'пожелание «розы» не проверить по анкетам']],
+   rej:[['Цветочная «Ару»','Занята 28 ноября']]},
+ { id:'S10', t:'Бюджет сильно ниже рынка',
+   check:'Если бюджет в разы меньше самых дешёвых цен, показываем ближайший вариант и прямо говорим, насколько он дороже.',
+   q:'Банкетный зал на юбилей в Алматы 10 октября, бюджет 100 тысяч',
+   parse:{'Кто':'банкетный зал','Город':'Алматы','Дата':'10 октября','Формат':'юбилей','Бюджет':'до 100 000 ₸'},
+   res:{empty:{h:'В этот бюджет залов нет',p:'Самый доступный свободный зал — «Мейрам» за 500 000 ₸. Это в пять раз больше указанного бюджета.',a:'Показать «Мейрам»'}},
+   steps:[[66,'в каталоге'],[38,'в Алматы'],[6,'банкетных залов'],[5,'берут юбилеи'],[4,'свободны 10 октября'],[0,'в бюджете']],
+   rej:[['Зал «Мейрам»','Свободен, 500 000 ₸ — в пять раз дороже бюджета'],['Зал «Той-Хан»','Свободен, 700 000 ₸ — в семь раз дороже бюджета'],['Ещё два зала','Дороже 1 000 000 ₸']]}
+];
+
+/* Примеры на клиентской вкладке ведут к сценариям */
+const EXAMPLES = [
+  {label:'Ведущий на корпоратив', text:'Ведущий на корпоратив в Алматы 1 октября, бюджет полтора миллиона', sc:'S1'},
+  {label:'Флорист с розами', text:'Флорист на свадьбу в Алматы 28 ноября, чтобы украсил розами', sc:'S9'},
+  {label:'Шоу за 200 тысяч', text:'Шоу-программа на корпоратив в Астане 14 ноября, бюджет 200 тысяч', sc:'S7'}
+];
+
+/* Любой свой текст → демо-ответ про ведущего на свадьбу */
+const DEFAULT_RES = {
+  parse:{'Кто':'ведущий','Город':'Алматы','Дата':'18 ноября','Формат':'свадьба','Бюджет':'до 1 000 000 ₸','Язык':'казахский'},
+  res:{title:'Три ведущих подходят', cards:[
+    {n:'Айгерим Н.',m:'Ведущая, Алматы',p:'850 000 ₸',w:'Ведёт свадьбы на казахском, в анкете отдельно указан беташар. Свободна 18 ноября.'},
+    {n:'Ерлан К.',m:'Ведущий, Алматы',p:'700 000 ₸',w:'Основной формат — свадьбы и тои, ведёт полностью на казахском.',note:'В анкете нет работы с диджеем — стоит уточнить.'},
+    {n:'Дана С.',m:'Ведущая, Алматы',p:'980 000 ₸',w:'Двуязычная программа и опыт больших залов. Цена близка к верхней границе бюджета.'}]}
+};
+
+/* ============ Вспомогательное ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let anon = false;
+const nm = (n,i) => anon ? 'Подрядчик ' + (i+1) : n;
+
+function parseLine(p){
+  return Object.entries(p).map(([k,v]) => `${esc(k)}: <b>${esc(v)}</b>`).join(', ');
+}
+function resultHTML(res){
+  if (res.empty){
+    return `<div class="empty"><h3>${esc(res.empty.h)}</h3><p>${esc(res.empty.p)}</p>
+      <button class="btn btn-line" type="button">${esc(res.empty.a)}</button></div>`;
+  }
+  const cards = res.cards.map((c,i) => `
+    <article class="card">
+      <div><div class="card-name">${esc(nm(c.n,i))}</div><div class="card-meta">${esc(c.m)}</div></div>
+      <div class="card-price">${esc(c.p)}</div>
+      <p class="card-why">${esc(c.w)}</p>
+      ${c.note ? `<p class="card-note">${esc(c.note)}</p>` : ''}
+      <div class="card-foot"><button class="btn btn-primary" type="button">Написать</button><button class="btn btn-line" type="button">Анкета</button></div>
+    </article>`).join('');
+  return `<h2>${esc(res.title)}</h2>${res.note ? `<p class="aside-note" style="margin:-8px 0 16px">${esc(res.note)}</p>` : ''}<div class="list">${cards}</div>`;
+}
+
+/* ============ Вкладки ============ */
+const tabs = [...document.querySelectorAll('.tab')];
+function openTab(id){
+  tabs.forEach(t => {
+    const on = t.id === id;
+    t.setAttribute('aria-selected', on);
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+  });
+  history.replaceState(null, '', id === 't2' ? '#how' : '#');
+  window.scrollTo(0,0);
+}
+tabs.forEach(t => t.addEventListener('click', () => openTab(t.id)));
+if (location.hash === '#how') openTab('t2');
+
+/* ============ Клиентская ============ */
+$('#examples').insertAdjacentHTML('beforeend',
+  EXAMPLES.map((e,i) => `<button class="ex" type="button" data-i="${i}">${esc(e.label)}</button>`).join(''));
+document.querySelectorAll('.ex').forEach(b => b.addEventListener('click', () => {
+  $('#q').value = EXAMPLES[b.dataset.i].text; $('#q').focus();
+}));
+
+$('#askForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const text = $('#q').value.trim();
+  if (!text){ $('#q').focus(); return; }
+  const ex = EXAMPLES.find(x => x.text === text);
+  const data = ex ? SC.find(s => s.id === ex.sc) : DEFAULT_RES;
+  $('#answer').hidden = true; $('#thinking').hidden = false;
+  setTimeout(() => {
+    $('#thinking').hidden = true;
+    $('#answer').innerHTML =
+      `<div class="understood"><span>Мы поняли так:</span> ${parseLine(data.parse)}
+        <button class="link" type="button" id="fix">Исправить</button></div>` + resultHTML(data.res);
+    $('#answer').hidden = false;
+    $('#fix').addEventListener('click', () => { $('#q').focus(); $('#q').select(); });
+  }, 700);
+});
+
+/* ============ Сценарии ============ */
+let cur = 'S7', llm = true;
+$('#scnList').innerHTML = SC.map((s,i) =>
+  `<li><button class="scn" type="button" data-id="${s.id}"><span class="num">${i+1}</span><span class="t">${esc(s.t)}</span></button></li>`).join('');
+document.querySelectorAll('.scn').forEach(b => b.addEventListener('click', () => { cur = b.dataset.id; renderCase(); }));
+
+function renderCase(){
+  const s = SC.find(x => x.id === cur), idx = SC.indexOf(s);
+  document.querySelectorAll('.scn').forEach(b => b.setAttribute('aria-current', b.dataset.id === cur));
+  const steps = s.steps.map(([n,l]) => `<li class="${n===0?'zero':''}"><b>${n}</b>${esc(l)}</li>`).join('');
+  const rej = s.rej.length
+    ? `<ul class="rej">${s.rej.map(([w,r],i) => `<li><span class="who">${esc(anon ? 'Кандидат ' + String.fromCharCode(1040+i) : w)}</span><span class="reason">${esc(r)}</span></li>`).join('')}</ul>`
+    : `<p class="rej-none">Никого не отсеяли на последних шагах.</p>`;
+  const raw = s.steps.map(([n,l]) => `${n}  ${l}`).join('\n');
+
+  $('#case').innerHTML = `
+    <div class="case-kicker">Сценарий ${idx+1} из ${SC.length}</div>
+    <h2>${esc(s.t)}</h2>
+    <p class="case-check"><b>Что проверяем.</b> ${esc(s.check)}</p>
+
+    <div class="section-label">Клиент пишет</div>
+    <div class="bubble">${esc(s.q)}</div>
+    <div class="parse">Система поняла: ${parseLine(s.parse)}</div>
+
+    <div class="section-label">Клиент видит</div>
+    ${resultHTML(s.res)}
+
+    <div class="section-label">Почему так</div>
+    ${llm ? `<ol class="steps">${steps}</ol>` : `<div class="raw">${esc(raw)}</div>`}
+
+    <div class="section-label">Кого отсеяли</div>
+    ${rej}
+
+    <div class="params">
+      <label><input type="checkbox" id="anon" ${anon?'checked':''}> Скрыть имена</label>
+      <label><input type="checkbox" id="llm" ${llm?'checked':''}> Объяснения человеческим языком</label>
+    </div>`;
+  $('#anon').addEventListener('change', e => { anon = e.target.checked; renderCase(); });
+  $('#llm').addEventListener('change', e => { llm = e.target.checked; renderCase(); });
+}
+renderCase();
+</script>
+</body>
+</html>
