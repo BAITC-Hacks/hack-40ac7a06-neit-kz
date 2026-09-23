@@ -19,6 +19,13 @@ const META = meta as {
 
 const money = (n: number) => `${n.toLocaleString('ru-RU')} ₸`;
 
+/** Откуда взялось отличие от других карточек выдачи. */
+const TIER_LABEL: Record<number, string> = {
+  1: 'по полям анкеты',
+  2: 'по тексту профиля',
+  3: 'профили почти совпадают',
+};
+
 export default function Home() {
   const [req, setReq] = useState<MatchRequest>(SCENARIOS[0].req);
   const [wishText, setWishText] = useState('');
@@ -246,10 +253,12 @@ function CardView({ card, index, anon, soft }: { card: Card; index: number; anon
       </div>
 
       <details className="mt-2 text-[11px] text-slate-500">
-        <summary className="cursor-pointer">почему эта карточка отличается от других</summary>
+        <summary className="cursor-pointer">чем отличается от других в этой выдаче</summary>
         <ul className="mt-1 list-disc pl-4">
           {card.differentiators.map((d) => (
-            <li key={d.axis}>[ярус {d.tier}] {d.value}</li>
+            <li key={d.axis}>
+              <span className="text-slate-400">{TIER_LABEL[d.tier]}:</span> {d.value}
+            </li>
           ))}
         </ul>
         <div className="mt-1">score {card.score}</div>
