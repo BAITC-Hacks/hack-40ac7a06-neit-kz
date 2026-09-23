@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { match } from '@/lib/match';
+import { explain, templateExplanation } from '@/lib/explain';
 import { META } from '@/lib/catalog';
 import type { MatchRequest } from '@/lib/types';
 
@@ -22,5 +23,18 @@ export async function POST(request: Request) {
   const body = (await request.json()) as Partial<MatchRequest>;
   const error = validate(body);
   if (error) return NextResponse.json({ error }, { status: 400 });
-  return NextResponse.json(match(body as MatchRequest));
+  const { llm, ...rest } = body as MatchRequest & { llm?: boolean };
+  const req = rest as MatchRequest;
+  const result = match(req);
+  const all = [...result.cards, ...result.softCards];
+  const { texts, source, issues } = llm === false
+    ? { texts: Object.fromEntries(all.map((c) => [c.id, templateExplanation(c, req)])), source: 'template' as const, issues: [] }
+    : await explain(all, req);
+  return NextResponse.json({
+    ...result,
+    cards: result.cards.map((c) => ({ ...c, explanation: texts[c.id] })),
+    softCards: result.softCards.map((c) => ({ ...c, explanation: texts[c.id] })),
+    explanationSource: source,
+    explanationIssues: issues,
+  });
 }

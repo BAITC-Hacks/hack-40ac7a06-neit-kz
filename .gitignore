@@ -12,3 +12,7 @@ node_modules/
 /build
 *.tsbuildinfo
 next-env.d.ts
+
+# служебное
+AGENTS.md
+CLAUDE.md
