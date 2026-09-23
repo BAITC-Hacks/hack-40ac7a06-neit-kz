@@ -104,7 +104,7 @@ function factSheet(card: Card, req: MatchRequest) {
   };
 }
 
-function systemPrompt(): string {
+export function systemPrompt(): string {
   return [
     'Ты пишешь короткие объяснения для карточек подрядчиков на площадке подбора event-услуг.',
     'На каждую карточку — 1–2 предложения на русском языке.',

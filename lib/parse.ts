@@ -126,7 +126,7 @@ type RawExtraction = {
   unclear?: Array<{ quote: string; note: string }>;
 };
 
-function systemPrompt(): string {
+export function systemPrompt(): string {
   return [
     'Ты разбираешь запрос клиента event-площадки на структурированные поля.',
     `Сегодня 23.09.2026. Каталог работает с датами ${META.dateWindow.from} — ${META.dateWindow.to}.`,
