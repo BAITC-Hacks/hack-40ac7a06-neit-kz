@@ -1,0 +1,108 @@
+{
+ "id": "S12",
+ "request": {
+  "city": "Астана",
+  "category": "Декоратор",
+  "eventFormat": "свадьба",
+  "date": "2026-10-05",
+  "budgetKzt": 2500000
+ },
+ "outcome": "NO_CATEGORY_IN_CITY",
+ "message": "В каталоге нет категории «Декоратор» в городе Астана. Всего таких подрядчиков 3, и все они в Алматы.",
+ "cards": [],
+ "softCards": [],
+ "nearestCards": [
+  {
+   "id": "HK-90003",
+   "name": "Усопп",
+   "priceFromKzt": 1800000,
+   "score": 0.4031,
+   "explanation": "Усопп предлагает цену 1 800 000 ₸ и специализируется всего на 2 форматах, но работает в Алматы, а не в Астане.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 1 800 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "formats",
+     "value": "узкий специалист: берёт всего 2 формата",
+     "tier": 1
+    }
+   ],
+   "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: работает в городе Алматы, не в Астане.",
+   "wishChecks": [],
+   "synthetic": true,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-90004",
+   "name": "Франки",
+   "priceFromKzt": 2200000,
+   "score": 0.3713,
+   "explanation": "Франки имеет награды и цену 2 200 000 ₸, однако работает в Алматы, а не в Астане.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 2 200 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "experience",
+     "value": "есть награды",
+     "tier": 1
+    }
+   ],
+   "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: работает в городе Алматы, не в Астане.",
+   "wishChecks": [],
+   "synthetic": true,
+   "priceImputed": false
+  },
+  {
+   "id": "HK-11484",
+   "name": "Уинри Рокбелл",
+   "priceFromKzt": 2000000,
+   "score": 0.441,
+   "explanation": "Уинри Рокбелл говорит на английском и русском, имеет более 5 лет опыта и награды, цена 2 000 000 ₸; занят 5 октября 2026 и работает в Алматы, не в Астане.",
+   "differentiators": [
+    {
+     "axis": "price",
+     "value": "цена 2 000 000 ₸",
+     "tier": 1
+    },
+    {
+     "axis": "languages",
+     "value": "языки: английский, русский",
+     "tier": 1
+    }
+   ],
+   "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: занят 2026-10-05, свободен 2026-10-06 — на 1 дн. позже; работает в городе Алматы, не в Астане.",
+   "wishChecks": [],
+   "synthetic": false,
+   "priceImputed": false
+  }
+ ],
+ "funnel": [
+  {
+   "step": "город",
+   "before": 66,
+   "after": 15,
+   "dropped": 51,
+   "reason": "город «Астана»"
+  },
+  {
+   "step": "категория",
+   "before": 15,
+   "after": 0,
+   "dropped": 15,
+   "reason": "категория «Декоратор»"
+  }
+ ],
+ "nearMisses": [],
+ "notes": [
+  "В выдаче есть профили, помеченные в датасете как синтетические — они отмечены в карточке."
+ ]
+}

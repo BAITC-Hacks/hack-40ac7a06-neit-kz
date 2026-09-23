@@ -361,12 +361,35 @@ function CardView({ card, index, anon, soft }: { card: Card; index: number; anon
         </p>
       )}
 
+      {card.relaxation?.travel && (
+        <div className="mt-2 rounded border border-sky-200 bg-sky-50 px-2 py-1.5 text-xs text-sky-900">
+          <div className="font-medium">
+            ✈️ {card.city} → {card.relaxation.travel.headcount > 1 ? 'место мероприятия' : 'место мероприятия'} и обратно:
+            от {money(card.relaxation.travel.totalKzt)}
+            <span className="font-normal">
+              {' '}· {money(card.relaxation.travel.perPersonKzt)} × {card.relaxation.travel.headcount}{' '}
+              {card.relaxation.travel.headcount > 1 ? 'человек' : 'человека'}
+              {card.relaxation.travel.basis === 'median' && ' · по медиане месяца, цены на этот день в снимке нет'}
+            </span>
+          </div>
+          <div className="mt-0.5">
+            {card.relaxation.travel.headcount > 1 && 'Состав — наше допущение, поля о составе в анкете нет. '}
+            Тариф минимальный: без багажа и без проживания — по факту выйдет дороже. Ночной поезд дешевле в 2–3 раза.
+          </div>
+          <div className="mt-0.5 text-[10px] text-sky-700">
+            Снимок цен Aviasales от 23.09.2026 · все допущения — в README
+          </div>
+        </div>
+      )}
+
       {card.explanation && <p className="mt-2 text-sm leading-relaxed">{card.explanation}</p>}
 
       <div className="mt-2 flex flex-wrap gap-1 text-[11px]">
         {card.facts.hoursSpare !== undefined && <Chip>запас {card.facts.hoursSpare} ч</Chip>}
         {card.facts.budgetLeftover !== undefined && card.facts.budgetLeftover >= 0 && (
-          <Chip>остаток бюджета {money(card.facts.budgetLeftover)}</Chip>
+          <Chip>
+            остаток бюджета{card.relaxation?.travel ? ' без проезда' : ''} {money(card.facts.budgetLeftover)}
+          </Chip>
         )}
         <Chip>языки: {card.facts.languages.join(', ')}</Chip>
         <Chip>форматов: {card.facts.formatsCount}</Chip>

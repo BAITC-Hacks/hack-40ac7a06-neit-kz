@@ -113,6 +113,10 @@ function neighbourFormat(req: MatchRequest, exclude: Set<string>): RelaxHit[] {
 /** 3. Перелёт: мобильные категории с чеком от миллиона. Площадки и «Зарубежье» исключены. */
 function flyIn(req: MatchRequest, exclude: Set<string>): RelaxHit[] {
   if (isVenue(req.category)) return [];
+  // Категории без лимита часов едут грузом, а не в кресле: декоратор везёт
+  // металлокаркас и подиумы — это фура, а не перелёт. Свойство уже записано
+  // в META.softDateCategories, отдельный ключ не заводим.
+  if (softDateWindow(req.category) > 0) return [];
   const hits: RelaxHit[] = [];
   for (const c of CONTRACTORS) {
     if (exclude.has(c.id)) continue;
@@ -125,8 +129,7 @@ function flyIn(req: MatchRequest, exclude: Set<string>): RelaxHit[] {
       label: `работает в городе ${c.city}`,
       detail:
         `В городе ${req.city} на ${req.date} подходящих нет, а он свободен. ` +
-        `Гонорар ${c.priceFromKzt.toLocaleString('ru-RU')} ₸ — перелёт и проживание считаются отдельной строкой сметы ` +
-        `и в цену не входят. Для коллектива расходы умножаются на состав.`,
+        `Гонорар ${c.priceFromKzt.toLocaleString('ru-RU')} ₸ — проезд считается отдельной строкой сметы и в цену не входит.`,
     });
   }
   return hits;

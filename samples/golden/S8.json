@@ -31,6 +31,7 @@
     }
    ],
    "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: занят 2026-10-01, свободен 2026-09-29 — на 2 дн. раньше; в анкете нет формата «корпоратив», указаны: свадьба, той.",
    "wishChecks": [],
    "synthetic": false,
    "priceImputed": false
@@ -54,6 +55,7 @@
     }
    ],
    "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: занят 2026-10-01, свободен 2026-09-27 — на 4 дн. раньше; в анкете нет формата «корпоратив», указаны: свадьба.",
    "wishChecks": [],
    "synthetic": true,
    "priceImputed": false
@@ -77,6 +79,7 @@
     }
    ],
    "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: в анкете нет формата «корпоратив», указаны: свадьба; работает в городе Астана, не в Алматы.",
    "wishChecks": [],
    "synthetic": true,
    "priceImputed": false

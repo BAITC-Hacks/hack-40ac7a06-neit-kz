@@ -1,7 +1,8 @@
 import { CONTRACTORS, priceRange } from './catalog';
+import { estimateTravelCost } from './travel';
 import { assignDifferentiators } from './differentiators';
 import { applyFilters } from './filters';
-import { collectRelaxations, nearestCandidates, suggestBetterDate } from './relax';
+import { collectRelaxations, nearestCandidates, suggestBetterDate, type RelaxHit } from './relax';
 import { buildFacts, byScoreThenId, checkWishes, scoreParts, totalScore } from './scoring';
 import type { Card, Contractor, MatchRequest, MatchResponse } from './types';
 
@@ -18,6 +19,22 @@ function plural(n: number, one: string, few: string, many: string): string {
   if (m10 === 1 && m100 !== 11) return `${n} ${one}`;
   if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return `${n} ${few}`;
   return `${n} ${many}`;
+}
+
+/**
+ * Проезд считается для любой карточки из другого города, а не только для правила FLY_IN:
+ * в блоке «ближайшее» тоже попадаются подрядчики из соседнего города.
+ */
+function withTravel(hit: RelaxHit, req: MatchRequest): NonNullable<Card['relaxation']> {
+  return {
+    rule: hit.rule,
+    label: hit.label,
+    detail: hit.detail,
+    travel:
+      hit.contractor.city !== req.city
+        ? estimateTravelCost(hit.contractor.city, req.city, req.date, req.category)
+        : undefined,
+  };
 }
 
 function toCard(c: Contractor, req: MatchRequest, pool: Contractor[]): Card {
@@ -120,7 +137,7 @@ export function match(req: MatchRequest): MatchResponse {
   const hits = collectRelaxations(req, cards.map((c) => c.id), slots);
   const softRanked = hits.map((hit) => {
     const card = toCard(hit.contractor, req, hits.map((h) => h.contractor));
-    return { ...card, relaxation: { rule: hit.rule, label: hit.label, detail: hit.detail } };
+    return { ...card, relaxation: withTravel(hit, req) };
   });
   const softCards = assignDifferentiators(softRanked, descriptions).map((c, i) => ({
     ...c,
@@ -135,7 +152,7 @@ export function match(req: MatchRequest): MatchResponse {
       : [];
   const nearestRanked = nearestHits.map((hit) => {
     const card = toCard(hit.contractor, req, nearestHits.map((h) => h.contractor));
-    return { ...card, relaxation: { rule: hit.rule, label: hit.label, detail: hit.detail } };
+    return { ...card, relaxation: withTravel(hit, req) };
   });
   const nearestCards = assignDifferentiators(nearestRanked, descriptions).map((c, i) => ({
     ...c,

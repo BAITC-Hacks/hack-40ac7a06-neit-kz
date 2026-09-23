@@ -31,6 +31,7 @@
     }
    ],
    "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: дороже бюджета в 4,5 раза (1 800 000 ₸ против 400 000 ₸).",
    "wishChecks": [],
    "synthetic": true,
    "priceImputed": false
@@ -54,6 +55,7 @@
     }
    ],
    "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: дороже бюджета в 5 раз (2 000 000 ₸ против 400 000 ₸).",
    "wishChecks": [],
    "synthetic": false,
    "priceImputed": false
@@ -77,6 +79,7 @@
     }
    ],
    "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: дороже бюджета в 5,5 раза (2 200 000 ₸ против 400 000 ₸); занят 2026-12-15, свободен 2026-12-20 — на 5 дн. позже.",
    "wishChecks": [],
    "synthetic": true,
    "priceImputed": false

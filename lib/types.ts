@@ -1,3 +1,5 @@
+import type { TravelCost } from './travel';
+
 // Типы домена. Одно правило на весь проект: даты — строки 'YYYY-MM-DD',
 // объект Date в фильтрах не используется (парсинг уезжает в UTC и сдвигает день).
 
@@ -108,6 +110,8 @@ export type Card = {
     rule: 'NEAREST' | 'SOFT_DATE' | 'NEIGHBOUR_FORMAT' | 'FLY_IN' | 'BUDGET_STRETCH' | 'DURATION_STRETCH';
     label: string;
     detail: string;
+    /** стоимость проезда, если карточка из другого города */
+    travel?: TravelCost;
   };
 };
 

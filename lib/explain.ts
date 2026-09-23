@@ -47,8 +47,20 @@ function loadCache(): Explanations {
 
 function saveCache(): void {
   // На Vercel файловая система только для чтения — пишем best-effort.
+  //
+  // Сливаем с тем, что уже на диске: иначе долгоживущий процесс (dev-сервер,
+  // поднятый до генерации эталонов) запишет свою устаревшую копию и затрёт
+  // записи, добавленные другим процессом. Один раз уже наступили.
   try {
-    writeFileSync(CACHE_PATH, JSON.stringify(cache ?? {}, null, 1), 'utf8');
+    let onDisk: Explanations = {};
+    try {
+      onDisk = JSON.parse(readFileSync(CACHE_PATH, 'utf8')) as Explanations;
+    } catch {
+      onDisk = {};
+    }
+    const merged = { ...onDisk, ...(cache ?? {}) };
+    cache = merged;
+    writeFileSync(CACHE_PATH, JSON.stringify(merged, null, 1), 'utf8');
   } catch {
     /* ignore */
   }

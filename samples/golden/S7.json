@@ -31,6 +31,7 @@
     }
    ],
    "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: дороже бюджета в 6,7 раза (2 000 000 ₸ против 300 000 ₸); занят 2026-11-14, свободен 2026-11-13 — на 1 дн. раньше; работает в городе Алматы, не в Астане.",
    "wishChecks": [],
    "synthetic": false,
    "priceImputed": true
@@ -54,6 +55,7 @@
     }
    ],
    "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: дороже бюджета в 8,3 раза (2 500 000 ₸ против 300 000 ₸); работает в городе Алматы, не в Астане.",
    "wishChecks": [],
    "synthetic": false,
    "priceImputed": true
@@ -77,6 +79,7 @@
     }
    ],
    "relaxation": "NEAREST",
+   "relaxationDetail": "Под ваши условия не подходит: дороже бюджета в 9,3 раза (2 800 000 ₸ против 300 000 ₸); занят 2026-11-14, свободен 2026-11-15 — на 1 дн. позже.",
    "wishChecks": [],
    "synthetic": true,
    "priceImputed": true
