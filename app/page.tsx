@@ -164,6 +164,11 @@ export default function Home() {
           Опишите событие своими словами. Вернём до трёх подрядчиков и скажем, почему именно они —
           и кого отсеяли по дороге.
         </p>
+        <p className="mt-2 text-sm">
+          <a href="/integration" className="underline underline-offset-2">
+            Как это встроить в свою площадку →
+          </a>
+        </p>
 
         <section className="mt-7">
           <div className="flex max-w-3xl gap-2.5">

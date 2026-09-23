@@ -189,8 +189,13 @@ function buildQuestion(p: ParsedRequest): string | undefined {
   return undefined;
 }
 
-export async function parseRequest(text: string): Promise<ParsedRequest> {
-  const key = cacheKey(text);
+/** Уже известные поля: диалог накапливает картину, а не начинает её заново каждой репликой. */
+export type KnownFields = Partial<
+  Pick<ParsedRequest, 'city' | 'date' | 'category' | 'eventFormat' | 'budgetKzt' | 'durationHours' | 'language'>
+> & { wishes?: string[] };
+
+export async function parseRequest(text: string, known?: KnownFields): Promise<ParsedRequest> {
+  const key = cacheKey(`${JSON.stringify(known ?? {})}|${text}`);
   const hit = cache.get(key);
   if (hit) return hit;
 
@@ -281,8 +286,8 @@ export async function parseRequest(text: string): Promise<ParsedRequest> {
     if (budgetGrounded(text, raw.budgetKzt)) budgetKzt = raw.budgetKzt;
   }
 
-  const language = raw.language && META.languages.includes(raw.language) ? raw.language : undefined;
-  const durationHours =
+  let language = raw.language && META.languages.includes(raw.language) ? raw.language : undefined;
+  let durationHours =
     typeof raw.durationHours === 'number' && raw.durationHours > 0 && raw.durationHours <= 24
       ? raw.durationHours
       : undefined;
@@ -329,6 +334,37 @@ export async function parseRequest(text: string): Promise<ParsedRequest> {
   });
   unsupported.length = 0;
   unsupported.push(...deduped);
+
+  // Новая реплика уточняет картину, а не заменяет её.
+  //
+  // Подменить уже известные город, категорию или формат новая реплика может только
+  // если человек назвал их прямо: иначе «хочу репортажную съёмку» превращает
+  // выбранного фотографа в видеографа, потому что модель додумывает по смыслу.
+  if (known) {
+    const saidExplicitly = (dict: Record<string, string>, value: string | undefined) =>
+      Boolean(value) && lookup(dict, text) === value;
+
+    if (known.category && category !== known.category && !saidExplicitly(CATEGORY_SYNONYMS, category)) {
+      category = known.category;
+    }
+    if (known.city && city !== known.city && !saidExplicitly(CITY_SYNONYMS, city)) {
+      city = known.city;
+    }
+    if (known.eventFormat && eventFormat !== known.eventFormat && !saidExplicitly(FORMAT_SYNONYMS, eventFormat)) {
+      eventFormat = known.eventFormat;
+    }
+
+    city = city ?? known.city;
+    date = date ?? known.date;
+    category = category ?? known.category;
+    eventFormat = eventFormat ?? known.eventFormat;
+    budgetKzt = budgetKzt ?? known.budgetKzt;
+    durationHours = durationHours ?? known.durationHours;
+    language = language ?? known.language;
+    if (known.wishes?.length) {
+      wishes = [...new Set([...known.wishes, ...wishes])].slice(0, 4);
+    }
+  }
 
   const missing: string[] = [];
   if (!category) missing.push('категория');
